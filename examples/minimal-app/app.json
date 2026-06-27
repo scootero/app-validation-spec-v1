@@ -1,0 +1,55 @@
+{
+  "specVersion": "1.0.0",
+  "appId": "focus-timer",
+  "status": "draft",
+  "identity": {
+    "appName": "Focus Timer",
+    "tagline": "Deep work, one session at a time",
+    "description": "Focus Timer is a minimalist iOS app that helps knowledge workers block distractions and complete meaningful work in timed focus sessions with gentle break reminders.",
+    "category": "productivity",
+    "platform": "ios",
+    "tags": ["pomodoro", "focus", "productivity"]
+  },
+  "audience": {
+    "primary": "Remote knowledge workers and students who struggle to stay focused during deep work blocks.",
+    "painPoints": [
+      "Constant context-switching between apps and notifications",
+      "No simple way to track how much focused time was actually spent"
+    ]
+  },
+  "commerce": {
+    "pricing": {
+      "model": "paid",
+      "currency": "USD",
+      "amount": 4.99,
+      "period": "one-time"
+    },
+    "cta": {
+      "primaryText": "Get Focus Timer",
+      "buyNowText": "Buy Now — $4.99"
+    }
+  },
+  "landingPage": {
+    "sections": [
+      {
+        "id": "hero",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Deep work, one session at a time",
+          "subheadline": "A minimalist focus timer for iOS that helps you finish what matters.",
+          "body": "Block distractions, run timed focus sessions, and see how much deep work you actually get done each day."
+        }
+      },
+      {
+        "id": "cta",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Start your first focus session today",
+          "subheadline": "One-time purchase. No subscription. No ads."
+        }
+      }
+    ]
+  }
+}

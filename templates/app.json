@@ -1,0 +1,230 @@
+{
+  "_comment": "TEMPLATE ONLY — remove all _comment keys from real app packages. Copy this file to your App Package folder as app.json.",
+  "specVersion": "1.0.0",
+  "appId": "your-app-id",
+  "status": "draft",
+  "identity": {
+    "_comment": "What the app is",
+    "appName": "Your App Name",
+    "tagline": "A short hook for hero sections and ads",
+    "description": "One paragraph describing what the app does and the core value proposition.",
+    "category": "productivity",
+    "platform": "ios",
+    "tags": ["example", "template"]
+  },
+  "audience": {
+    "_comment": "Who the app is for",
+    "primary": "Describe your primary target audience in one or two sentences.",
+    "secondary": "Optional secondary audience.",
+    "painPoints": [
+      "First problem your app solves",
+      "Second problem your app solves"
+    ],
+    "personas": [
+      {
+        "name": "Example Persona",
+        "summary": "Brief description of a representative user and their goals."
+      }
+    ]
+  },
+  "commerce": {
+    "_comment": "Pricing and call-to-action labels",
+    "pricing": {
+      "model": "subscription",
+      "currency": "USD",
+      "amount": 9.99,
+      "period": "monthly",
+      "trialDays": 7
+    },
+    "cta": {
+      "primaryText": "Start Free Trial",
+      "secondaryText": "Learn More",
+      "buyNowText": "Buy Now",
+      "waitlistText": "Join Waitlist"
+    }
+  },
+  "branding": {
+    "_comment": "Visual theme and tone",
+    "theme": {
+      "mode": "light",
+      "primaryColor": "#2563EB",
+      "accentColor": "#F59E0B",
+      "fontFamily": "Inter, system-ui, sans-serif"
+    },
+    "style": {
+      "tone": "professional",
+      "styleNotes": "Clean, modern, trustworthy. Avoid jargon."
+    }
+  },
+  "mockup": {
+    "_comment": "Source project info and deployed preview. previewUrl is written by automation.",
+    "type": "interactive",
+    "sourcePath": "mockup/",
+    "framework": "react",
+    "entryPoint": "mockup/index.html",
+    "buildCommand": "npm run build",
+    "deployCommand": "npx vercel deploy --prod",
+    "previewUrl": null,
+    "notes": "Optional notes for the mockup build and deploy pipeline."
+  },
+  "media": {
+    "_comment": "Paths relative to package root",
+    "icon": { "path": "media/icon.png", "alt": "App icon" },
+    "logo": { "path": "media/logo.png", "alt": "App logo" },
+    "ogImage": { "path": "media/og-image.png", "alt": "Social share image" },
+    "screenshots": [
+      { "path": "media/screenshots/01-home.png", "alt": "Home screen" },
+      { "path": "media/screenshots/02-feature.png", "alt": "Key feature" }
+    ],
+    "demoVideo": { "path": "media/demo.mp4", "alt": "Product demo video" }
+  },
+  "landingPage": {
+    "_comment": "Section order matters. Use source:inline for minimal packages or source:file for copy/*.md",
+    "slug": "your-app-id",
+    "sections": [
+      {
+        "id": "hero",
+        "enabled": true,
+        "source": "file",
+        "file": "copy/hero.md"
+      },
+      {
+        "id": "features",
+        "enabled": true,
+        "source": "file",
+        "file": "copy/features.md"
+      },
+      {
+        "id": "socialProof",
+        "enabled": false,
+        "source": "inline",
+        "inline": {
+          "headline": "Trusted by early adopters",
+          "body": "Add testimonials or social proof here."
+        }
+      },
+      {
+        "id": "pricing",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Simple pricing",
+          "subheadline": "Start free, upgrade when you're ready."
+        }
+      },
+      {
+        "id": "faq",
+        "enabled": true,
+        "source": "file",
+        "file": "copy/faq.md"
+      },
+      {
+        "id": "cta",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Ready to get started?",
+          "subheadline": "Join thousands of users today."
+        }
+      },
+      {
+        "id": "footer",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "body": "© 2026 Your App Name. All rights reserved."
+        }
+      }
+    ],
+    "seo": {
+      "title": "Your App Name — Short SEO title",
+      "description": "Meta description for search engines and social previews.",
+      "keywords": ["keyword-one", "keyword-two"]
+    }
+  },
+  "ads": {
+    "_comment": "Facebook / paid social copy variants",
+    "campaignName": "your-app-id-launch",
+    "objective": "conversions",
+    "headlines": [
+      "Headline variant A",
+      "Headline variant B",
+      "Headline variant C"
+    ],
+    "primaryTexts": [
+      "Primary ad text variant A — up to 125 characters recommended.",
+      "Primary ad text variant B."
+    ],
+    "descriptions": [
+      "Short description for the ad link.",
+      "Alternate description."
+    ],
+    "callToAction": "SIGN_UP",
+    "utmTemplate": "utm_source=facebook&utm_medium=paid&utm_campaign={{appId}}"
+  },
+  "tracking": {
+    "_comment": "Webhook URLs are null until n8n or your backend provisions them",
+    "webhooks": {
+      "validationComplete": null,
+      "deployComplete": null,
+      "emailCaptured": null,
+      "buyNowClicked": null
+    },
+    "events": [
+      {
+        "name": "page_view",
+        "description": "Landing page viewed"
+      },
+      {
+        "name": "email_captured",
+        "description": "User submitted email on landing page"
+      }
+    ]
+  },
+  "analytics": {
+    "_comment": "Dashboard routing identifiers",
+    "projectId": "proj_your-app-id",
+    "experimentId": "exp_your-app-id_001",
+    "funnelName": "validation_funnel",
+    "customDimensions": {
+      "category": "productivity",
+      "platform": "ios"
+    }
+  },
+  "experiment": {
+    "_comment": "Required before setting status to ready. Defines the validation test.",
+    "experimentName": "Your App — Q2 Validation",
+    "hypothesis": "We believe [audience] will [action] because [reason].",
+    "successCriteria": [
+      "Cost per email signup below $5",
+      "Buy Now click rate above 2%",
+      "At least 100 landing page visitors"
+    ],
+    "testBudget": {
+      "currency": "USD",
+      "amount": 500,
+      "durationDays": 14
+    },
+    "decisionRules": {
+      "winnerThreshold": "CPA below $5 AND buy-now rate above 2% after min sample size",
+      "killThreshold": "CPA above $15 after 50% of budget spent with no conversions",
+      "minSampleSize": 100,
+      "notes": "Pause and review manually if results are inconclusive at day 10."
+    }
+  },
+  "deployment": {
+    "_comment": "Populated by automation. Leave null until deploy steps complete.",
+    "mockupUrl": null,
+    "landingPageUrl": null,
+    "vercelProjectId": null,
+    "githubRepoUrl": null
+  },
+  "appStore": {
+    "_comment": "Optional. Reserved for future App Store metadata workflows.",
+    "subtitle": "Short App Store subtitle",
+    "keywords": ["keyword-one", "keyword-two"],
+    "promotionalText": "Promotional text shown above the description on the App Store.",
+    "description": "Full App Store description. Can be longer than identity.description.",
+    "appStoreUrl": null
+  }
+}

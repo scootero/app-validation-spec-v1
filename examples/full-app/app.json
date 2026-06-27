@@ -1,0 +1,206 @@
+{
+  "specVersion": "1.0.0",
+  "appId": "habit-stack",
+  "status": "ready",
+  "identity": {
+    "appName": "Habit Stack",
+    "tagline": "Build better habits, one stack at a time",
+    "description": "Habit Stack is a cross-platform wellness app that helps busy adults build lasting routines by chaining small daily habits with streak tracking, smart reminders, and weekly insights.",
+    "category": "health-fitness",
+    "platform": "cross-platform",
+    "tags": ["habits", "wellness", "routines", "streaks"]
+  },
+  "audience": {
+    "primary": "Health-conscious adults aged 25–45 who want to build morning and evening routines without complicated productivity systems.",
+    "secondary": "People returning to fitness or mindfulness after a break who need a gentle restart.",
+    "painPoints": [
+      "Starting too many habits at once and burning out within two weeks",
+      "Existing apps feel like chores instead of small wins",
+      "No single place to track routines across phone and desktop"
+    ],
+    "personas": [
+      {
+        "name": "Morning Optimizer",
+        "summary": "Remote professional who wants a 20-minute morning routine before work — hydrate, stretch, journal, plan the day."
+      },
+      {
+        "name": "Comeback Coach",
+        "summary": "Someone rebuilding consistency after travel or illness. Needs low friction and forgiving streak rules."
+      }
+    ]
+  },
+  "commerce": {
+    "pricing": {
+      "model": "subscription",
+      "currency": "USD",
+      "amount": 6.99,
+      "period": "monthly",
+      "trialDays": 7
+    },
+    "cta": {
+      "primaryText": "Start Free Trial",
+      "secondaryText": "See how it works",
+      "buyNowText": "Subscribe Now",
+      "waitlistText": "Join the waitlist"
+    }
+  },
+  "branding": {
+    "theme": {
+      "mode": "light",
+      "primaryColor": "#059669",
+      "accentColor": "#F59E0B",
+      "fontFamily": "Inter, system-ui, sans-serif"
+    },
+    "style": {
+      "tone": "playful",
+      "styleNotes": "Warm, encouraging, and calm. Celebrate progress without guilt. Avoid corporate wellness jargon."
+    }
+  },
+  "mockup": {
+    "type": "interactive",
+    "sourcePath": "mockup/",
+    "framework": "react",
+    "entryPoint": "mockup/index.html",
+    "buildCommand": "npm run build",
+    "deployCommand": "npx vercel deploy --prod",
+    "previewUrl": null,
+    "notes": "Prototype should demonstrate stack creation, daily check-in, and streak view."
+  },
+  "media": {
+    "icon": { "path": "media/icon.png", "alt": "Habit Stack app icon" },
+    "logo": { "path": "media/logo.png", "alt": "Habit Stack logo" },
+    "ogImage": { "path": "media/og-image.png", "alt": "Habit Stack — build better habits", "width": 1200, "height": 630 },
+    "screenshots": [
+      { "path": "media/screenshots/01-home.png", "alt": "Today's habit stack" },
+      { "path": "media/screenshots/02-feature.png", "alt": "Streak and insights view" }
+    ],
+    "demoVideo": { "path": "media/demo.mp4", "alt": "Habit Stack product demo" }
+  },
+  "landingPage": {
+    "slug": "habit-stack",
+    "sections": [
+      { "id": "hero", "enabled": true, "source": "file", "file": "copy/hero.md" },
+      { "id": "features", "enabled": true, "source": "file", "file": "copy/features.md" },
+      {
+        "id": "socialProof",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Loved by early testers",
+          "body": "\"Finally an habit app that doesn't make me feel bad for missing a day.\" — Beta tester, Austin"
+        }
+      },
+      {
+        "id": "pricing",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Simple pricing",
+          "subheadline": "$6.99/month after a 7-day free trial. Cancel anytime."
+        }
+      },
+      { "id": "faq", "enabled": true, "source": "file", "file": "copy/faq.md" },
+      {
+        "id": "cta",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "headline": "Ready to build your first stack?",
+          "subheadline": "Join thousands forming better routines — one small habit at a time."
+        }
+      },
+      {
+        "id": "footer",
+        "enabled": true,
+        "source": "inline",
+        "inline": {
+          "body": "© 2026 Habit Stack. Privacy · Terms · Contact"
+        }
+      }
+    ],
+    "seo": {
+      "title": "Habit Stack — Build better habits, one stack at a time",
+      "description": "Chain small daily habits into lasting routines. Cross-platform, streak tracking, 7-day free trial.",
+      "keywords": ["habit tracker", "routine app", "streak app", "wellness", "morning routine"]
+    }
+  },
+  "ads": {
+    "campaignName": "habit-stack-q2-validation",
+    "objective": "conversions",
+    "headlines": [
+      "Build habits that actually stick",
+      "Your morning routine, simplified",
+      "Small habits. Big results."
+    ],
+    "primaryTexts": [
+      "Stack 3–5 micro-habits and track them in under a minute a day. Try Habit Stack free for 7 days.",
+      "Tired of habit apps that feel like chores? Habit Stack makes consistency feel like winning.",
+      "Cross-platform habit tracking with streaks and weekly insights. Start your free trial today."
+    ],
+    "descriptions": [
+      "7-day free trial. Cancel anytime.",
+      "iOS, Android, and web. One subscription.",
+      "Join thousands building better routines."
+    ],
+    "callToAction": "SIGN_UP",
+    "utmTemplate": "utm_source=facebook&utm_medium=paid&utm_campaign=habit-stack&utm_content={{headline_variant}}"
+  },
+  "tracking": {
+    "webhooks": {
+      "validationComplete": null,
+      "deployComplete": null,
+      "emailCaptured": null,
+      "buyNowClicked": null
+    },
+    "events": [
+      { "name": "page_view", "description": "Landing page viewed" },
+      { "name": "email_captured", "description": "User submitted email on landing page" },
+      { "name": "buy_now_clicked", "description": "User clicked Subscribe Now" },
+      { "name": "trial_started", "description": "User completed trial signup flow" }
+    ]
+  },
+  "analytics": {
+    "projectId": "proj_habit-stack",
+    "experimentId": "exp_habit-stack_2026q2_001",
+    "funnelName": "validation_funnel",
+    "customDimensions": {
+      "category": "health-fitness",
+      "platform": "cross-platform",
+      "pricing_model": "subscription"
+    }
+  },
+  "experiment": {
+    "experimentName": "Habit Stack — Q2 2026 Validation",
+    "hypothesis": "We believe health-conscious adults aged 25–45 will sign up for a free trial at a CPA below $8 because current habit apps feel overwhelming and Habit Stack offers a simpler stacking approach.",
+    "successCriteria": [
+      "Cost per email signup below $5",
+      "Trial start rate above 15% of email signups",
+      "Buy Now / Subscribe click rate above 2.5%",
+      "At least 200 unique landing page visitors"
+    ],
+    "testBudget": {
+      "currency": "USD",
+      "amount": 750,
+      "durationDays": 14
+    },
+    "decisionRules": {
+      "winnerThreshold": "CPA below $8 AND trial start rate above 15% after min sample size reached",
+      "killThreshold": "CPA above $20 after 50% of budget spent with fewer than 10 email signups",
+      "minSampleSize": 200,
+      "notes": "Pause for manual review if CPA is $8–$15 at day 10 with positive engagement but low conversions."
+    }
+  },
+  "deployment": {
+    "mockupUrl": null,
+    "landingPageUrl": null,
+    "vercelProjectId": null,
+    "githubRepoUrl": null
+  },
+  "appStore": {
+    "subtitle": "Stack small habits daily",
+    "keywords": ["habits", "routine", "streaks", "wellness", "morning"],
+    "promotionalText": "New: Flex days for travel and rest. Keep your routine without breaking your streak guilt-free.",
+    "description": "Habit Stack helps you build lasting routines by chaining small daily habits. Create morning and evening stacks, track completion in under a minute, and watch your consistency grow with streaks and weekly insights. Cross-platform sync across iOS, Android, and web. Start your 7-day free trial today.",
+    "appStoreUrl": null
+  }
+}

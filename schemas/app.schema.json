@@ -1,0 +1,620 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/app-validation-spec/app-validation-spec/schemas/app.schema.json",
+  "title": "App Package",
+  "description": "Schema for app.json — the canonical manifest of an App Package in the automated app validation system.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "specVersion",
+    "appId",
+    "status",
+    "identity",
+    "audience",
+    "commerce",
+    "landingPage"
+  ],
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "description": "Semver of the App Package Specification this file conforms to.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    },
+    "appId": {
+      "type": "string",
+      "description": "Stable kebab-case identifier. Used for Drive folder name, URLs, and analytics. Never rename after first deploy.",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "minLength": 2,
+      "maxLength": 64,
+      "examples": ["focus-timer-pro"]
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle state of the app package in the validation pipeline.",
+      "enum": ["draft", "ready", "validating", "paused", "winner", "killed", "built"]
+    },
+    "identity": { "$ref": "#/$defs/identity" },
+    "audience": { "$ref": "#/$defs/audience" },
+    "commerce": { "$ref": "#/$defs/commerce" },
+    "branding": { "$ref": "#/$defs/branding" },
+    "mockup": { "$ref": "#/$defs/mockup" },
+    "media": { "$ref": "#/$defs/media" },
+    "landingPage": { "$ref": "#/$defs/landingPage" },
+    "ads": { "$ref": "#/$defs/ads" },
+    "tracking": { "$ref": "#/$defs/tracking" },
+    "analytics": { "$ref": "#/$defs/analytics" },
+    "experiment": { "$ref": "#/$defs/experiment" },
+    "deployment": { "$ref": "#/$defs/deployment" },
+    "appStore": { "$ref": "#/$defs/appStore" }
+  },
+  "$defs": {
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appName", "description", "category", "platform"],
+      "properties": {
+        "appName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Display name of the app."
+        },
+        "tagline": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "Short hook shown in hero sections and ads."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500,
+          "description": "One-paragraph summary of what the app does."
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "productivity",
+            "health-fitness",
+            "finance",
+            "education",
+            "entertainment",
+            "social",
+            "utilities",
+            "lifestyle",
+            "business",
+            "developer-tools",
+            "other"
+          ],
+          "description": "Primary app category. Use categoryLabel when category is other."
+        },
+        "categoryLabel": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Free-text category when category is other."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["ios", "android", "web", "cross-platform"],
+          "description": "Target platform for the app idea."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "maxItems": 20,
+          "uniqueItems": true,
+          "description": "Optional discovery and filtering tags."
+        }
+      },
+      "if": {
+        "properties": { "category": { "const": "other" } },
+        "required": ["category"]
+      },
+      "then": {
+        "required": ["categoryLabel"]
+      }
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary"],
+      "properties": {
+        "primary": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 300,
+          "description": "Primary target audience description."
+        },
+        "secondary": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Optional secondary audience."
+        },
+        "painPoints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 5, "maxLength": 200 },
+          "minItems": 1,
+          "maxItems": 10,
+          "description": "Problems the app solves for the audience."
+        },
+        "personas": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/persona" },
+          "maxItems": 5
+        }
+      }
+    },
+    "persona": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "summary"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "summary": { "type": "string", "minLength": 10, "maxLength": 300 }
+      }
+    },
+    "commerce": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pricing", "cta"],
+      "properties": {
+        "pricing": { "$ref": "#/$defs/pricing" },
+        "cta": { "$ref": "#/$defs/cta" }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model"],
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": ["free", "freemium", "paid", "subscription"]
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "ISO 4217 currency code.",
+          "examples": ["USD"]
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Price amount. Use 0 for free apps."
+        },
+        "period": {
+          "type": "string",
+          "enum": ["one-time", "monthly", "yearly"],
+          "description": "Billing period for subscription or paid models."
+        },
+        "trialDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "model": { "enum": ["paid", "subscription", "freemium"] } },
+            "required": ["model"]
+          },
+          "then": { "required": ["currency", "amount"] }
+        },
+        {
+          "if": {
+            "properties": { "model": { "const": "subscription" } },
+            "required": ["model"]
+          },
+          "then": { "required": ["period"] }
+        }
+      ]
+    },
+    "cta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryText", "buyNowText"],
+      "properties": {
+        "primaryText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Main call-to-action button label."
+        },
+        "secondaryText": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Secondary action label, e.g. Learn More."
+        },
+        "buyNowText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Label for purchase-intent actions on the landing page."
+        },
+        "waitlistText": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Label for waitlist or early-access signup."
+        }
+      }
+    },
+    "branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["theme", "style"],
+      "properties": {
+        "theme": { "$ref": "#/$defs/theme" },
+        "style": { "$ref": "#/$defs/style" }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "primaryColor"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["light", "dark", "auto"]
+        },
+        "primaryColor": {
+          "type": "string",
+          "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$"
+        },
+        "accentColor": {
+          "type": "string",
+          "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$"
+        },
+        "fontFamily": {
+          "type": "string",
+          "maxLength": 100
+        }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tone"],
+      "properties": {
+        "tone": {
+          "type": "string",
+          "enum": ["professional", "playful", "minimal", "bold", "custom"]
+        },
+        "styleNotes": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "mockup": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Source project info for building the interactive mockup and deployed preview info after automation runs.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["static", "prototype", "interactive"],
+          "description": "Mockup fidelity level."
+        },
+        "sourcePath": {
+          "type": "string",
+          "description": "Path to mockup source relative to package root, e.g. mockup/."
+        },
+        "framework": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Framework or toolchain, e.g. react, vue, html-static."
+        },
+        "entryPoint": {
+          "type": "string",
+          "description": "Entry file relative to package root, e.g. mockup/index.html."
+        },
+        "buildCommand": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Shell command to build the mockup before deploy."
+        },
+        "deployCommand": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Shell command to deploy the built mockup."
+        },
+        "previewUrl": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "description": "Live preview URL after mockup deploy. Null until deployed."
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    },
+    "mediaAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path relative to package root."
+        },
+        "alt": { "type": "string", "maxLength": 200 },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "icon": { "$ref": "#/$defs/mediaAsset" },
+        "logo": { "$ref": "#/$defs/mediaAsset" },
+        "ogImage": { "$ref": "#/$defs/mediaAsset" },
+        "screenshots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mediaAsset" },
+          "maxItems": 10
+        },
+        "demoVideo": { "$ref": "#/$defs/mediaAsset" }
+      }
+    },
+    "landingPageSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "enabled", "source"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": ["hero", "features", "socialProof", "pricing", "faq", "cta", "footer"]
+        },
+        "enabled": { "type": "boolean" },
+        "source": {
+          "type": "string",
+          "enum": ["inline", "file"]
+        },
+        "inline": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "headline": { "type": "string", "maxLength": 120 },
+            "subheadline": { "type": "string", "maxLength": 300 },
+            "body": { "type": "string", "maxLength": 2000 }
+          }
+        },
+        "file": {
+          "type": "string",
+          "description": "Path to markdown copy file relative to package root."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "source": { "const": "inline" }, "enabled": { "const": true } },
+            "required": ["source", "enabled"]
+          },
+          "then": { "required": ["inline"] }
+        },
+        {
+          "if": {
+            "properties": { "source": { "const": "file" }, "enabled": { "const": true } },
+            "required": ["source", "enabled"]
+          },
+          "then": { "required": ["file"] }
+        }
+      ]
+    },
+    "landingPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections"],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "description": "URL slug for the landing page. Defaults to appId when omitted."
+        },
+        "sections": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/landingPageSection" },
+          "minItems": 1
+        },
+        "seo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string", "maxLength": 70 },
+            "description": { "type": "string", "maxLength": 160 },
+            "keywords": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+              "maxItems": 15
+            }
+          }
+        }
+      }
+    },
+    "ads": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "campaignName": { "type": "string", "maxLength": 100 },
+        "objective": {
+          "type": "string",
+          "enum": ["awareness", "traffic", "conversions", "leads", "app-installs"]
+        },
+        "headlines": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "maxItems": 5
+        },
+        "primaryTexts": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 125 },
+          "maxItems": 5
+        },
+        "descriptions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 90 },
+          "maxItems": 5
+        },
+        "callToAction": {
+          "type": "string",
+          "enum": [
+            "LEARN_MORE",
+            "SHOP_NOW",
+            "SIGN_UP",
+            "DOWNLOAD",
+            "GET_OFFER",
+            "SUBSCRIBE"
+          ]
+        },
+        "utmTemplate": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "UTM query string template with placeholders, e.g. utm_source=facebook&utm_campaign={{appId}}."
+        }
+      }
+    },
+    "tracking": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "webhooks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "validationComplete": { "type": ["string", "null"], "format": "uri" },
+            "deployComplete": { "type": ["string", "null"], "format": "uri" },
+            "emailCaptured": { "type": ["string", "null"], "format": "uri" },
+            "buyNowClicked": { "type": ["string", "null"], "format": "uri" }
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+              "description": { "type": "string", "maxLength": 200 }
+            }
+          },
+          "maxItems": 20
+        }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "projectId": { "type": "string", "maxLength": 100 },
+        "experimentId": { "type": "string", "maxLength": 100 },
+        "funnelName": { "type": "string", "maxLength": 100 },
+        "customDimensions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "experiment": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Validation experiment definition — hypothesis, budget, and decision rules for the automated test.",
+      "properties": {
+        "experimentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Human-readable name for this validation run."
+        },
+        "hypothesis": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500,
+          "description": "What you believe will happen and why."
+        },
+        "successCriteria": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 5, "maxLength": 200 },
+          "minItems": 1,
+          "maxItems": 10,
+          "description": "Measurable outcomes that define experiment success."
+        },
+        "testBudget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "currency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "amount": {
+              "type": "number",
+              "minimum": 0
+            },
+            "durationDays": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 90
+            }
+          },
+          "required": ["currency", "amount", "durationDays"]
+        },
+        "decisionRules": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "winnerThreshold": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Rule for promoting an app to winner status."
+            },
+            "killThreshold": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Rule for killing an underperforming experiment."
+            },
+            "minSampleSize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Minimum events or visitors before a decision."
+            },
+            "notes": {
+              "type": "string",
+              "maxLength": 500
+            }
+          }
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Generated and deployed URLs and platform IDs. Populated by automation; null until deploy steps complete.",
+      "properties": {
+        "mockupUrl": { "type": ["string", "null"], "format": "uri" },
+        "landingPageUrl": { "type": ["string", "null"], "format": "uri" },
+        "vercelProjectId": { "type": ["string", "null"], "maxLength": 100 },
+        "githubRepoUrl": { "type": ["string", "null"], "format": "uri" }
+      }
+    },
+    "appStore": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Reserved for future App Store metadata. Optional in Phase 1.",
+      "properties": {
+        "subtitle": { "type": "string", "maxLength": 30 },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 30 },
+          "maxItems": 10
+        },
+        "promotionalText": { "type": "string", "maxLength": 170 },
+        "description": { "type": "string", "maxLength": 4000 },
+        "appStoreUrl": { "type": ["string", "null"], "format": "uri" }
+      }
+    }
+  }
+}
