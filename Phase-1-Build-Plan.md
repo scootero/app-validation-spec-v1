@@ -1,817 +1,294 @@
-Phase 1: App Validation Specification
+# Phase 1: App Validation Specification
 
-Documentation & Contract Plan
+**Status:** Complete  
+**Spec version shipped:** 1.1.0  
+**Completed:** 2026-06-27
 
-Overview
+This document records the Phase 1 plan and what was delivered. The **normative contract** lives in [APP_PACKAGE_SPEC.md](APP_PACKAGE_SPEC.md) and [schemas/app.schema.json](schemas/app.schema.json). If this plan and those files disagree, trust the spec and schema.
 
-Establish the app-validation-spec repository as the official documentation-and-contract foundation for an automated app validation system.
+---
 
-This repo defines how every future app idea should be packaged so automation tools like n8n, Cursor, Codex, Vercel, Meta Ads, analytics dashboards, and landing page templates can consume the same standardized input.
+## Overview
 
-Phase 1 is documentation and contract only.
+Phase 1 established `app-validation-spec` as the official documentation-and-contract foundation for an automated app validation system.
 
-Do not build:
+The repo defines how every app idea should be packaged so automation tools (n8n, Cursor, Codex, Vercel, Meta Ads, analytics dashboards, landing page templates) can consume the same standardized input.
 
-* validator CLI
-* n8n workflows
-* landing page generator
-* Vercel deployment logic
-* Facebook ad publishing
-* dashboard
+Phase 1 is **documentation and contract only**. No runtime tooling was built.
 
-⸻
+---
 
-1. Current Repo Structure
+## Repo structure (shipped)
 
-The current folder should be reused:
-
+```txt
 app-validation-spec/
+├── README.md
 ├── APP_PACKAGE_SPEC.md
 ├── CHANGELOG.md
-├── README.md
-├── docs/
-│   ├── design-philosophy.md
-│   ├── n8n-integration-notes.md
-│   ├── naming-conventions.md
-│   ├── versioning.md
-│   └── workflow.md
-├── examples/
-│   ├── full-app/
-│   │   ├── app.json
-│   │   ├── copy/
-│   │   │   ├── faq.md
-│   │   │   ├── features.md
-│   │   │   └── hero.md
-│   │   ├── media/
-│   │   │   └── README.md
-│   │   ├── mockup/
-│   │   │   └── README.md
-│   │   └── README.md
-│   └── minimal-app/
-│       ├── app.json
-│       └── README.md
+├── Phase-1-Build-Plan.md          # this file
 ├── schemas/
 │   └── app.schema.json
-└── templates/
-    ├── app.json
-    └── copy/
-        ├── faq.md
-        ├── features.md
-        └── hero.md
+├── templates/
+│   ├── app.json
+│   └── copy/
+│       ├── hero.md
+│       ├── features.md
+│       └── faq.md
+├── examples/
+│   ├── minimal-app/               # Focus Timer — draft, inline copy
+│   └── full-app/                  # Habit Stack — ready, all sections
+└── docs/
+    ├── design-philosophy.md
+    ├── workflow.md
+    ├── n8n-integration-notes.md
+    ├── naming-conventions.md
+    └── versioning.md
+```
 
-This is the correct Phase 1 structure.
+---
 
-Do not delete it.
+## Implementation status
 
-Update it.
+| Step | Scope | Status |
+|------|-------|--------|
+| **A — Contract core** | `README.md`, `APP_PACKAGE_SPEC.md`, `schemas/app.schema.json`, `templates/app.json`, `CHANGELOG.md` | Done |
+| **B — Templates & examples** | `templates/copy/`, `examples/minimal-app/`, `examples/full-app/` | Done |
+| **C — Supporting docs** | All files in `docs/` | Done |
 
-⸻
+---
 
-2. Project Purpose
+## Shipped spec version: 1.1.0
 
-The system will eventually allow a user to create a standardized app package in Google Drive.
+See [CHANGELOG.md](CHANGELOG.md) for the full 1.1.0 release notes.
 
-n8n will later:
+### Added in 1.1.0 (backward compatible)
 
-Read App Package
-↓
-Validate app.json and required files
-↓
-Deploy mockup app
-↓
-Generate landing page config
-↓
-Deploy landing page to Vercel
-↓
-Create Facebook ad assets
-↓
-Track emails and Buy Now clicks
-↓
-Feed metrics into analytics dashboard
-↓
-Decide whether to build, kill, pause, or continue validating
+- `landingPage.sections`: `id: "screenshots"` with `source: "media"`
+- `mockup.installCommand`, `mockup.devCommand`
+- `deployment.vercelDeploymentUrl`, `deployment.lastDeployedAt`
+- `appStore.supportUrl`, `appStore.privacyPolicyUrl`
+- `mediaAsset.title`, `mediaAsset.description` (screenshot captions)
+- `ads.platforms[]`
+- Structured `ads.utmTemplate` object (legacy string form still valid)
 
-The App Package is the source of truth.
+Packages at `specVersion: "1.0.0"` remain valid if they omit 1.1.0 optional fields.
 
-⸻
+---
 
-3. Core Design Philosophy
+## Key design decisions (implemented)
 
-The spec should be:
+### Required root fields (JSON Schema)
 
-* human-editable
-* AI-generatable
-* n8n-friendly
-* JSON-schema-validatable
-* versioned
-* flexible across many app categories
-* strict enough for reliable automation
-* reusable for landing pages, ads, dashboards, App Store metadata, analytics, and mockup deployment
+```
+specVersion, appId, status, identity, audience, commerce, landingPage
+```
 
-The repo should define the contract.
+`experiment` is **not** root-required. It is optional in the schema so minimal/draft packages stay valid. It **must be fully populated before `status: ready`** — enforced in Phase 2 validator, not JSON Schema alone.
 
-The validator, workflows, and generators come later.
+### experiment model (repo version, not original plan draft)
 
-⸻
+The shipped model uses automation-friendly structures:
 
-4. Updated app.json Top-Level Structure
-
-The improved top-level schema should include:
-
-{
-  "specVersion": "1.0.0",
-  "status": "draft",
-  "appId": "focus-timer-pro",
-  "identity": {},
-  "audience": {},
-  "experiment": {},
-  "commerce": {},
-  "branding": {},
-  "mockup": {},
-  "media": {},
-  "landingPage": {},
-  "ads": {},
-  "tracking": {},
-  "analytics": {},
-  "deployment": {},
-  "appStore": {}
-}
-
-⸻
-
-5. Required Root Fields
-
-Required:
-
-specVersion
-status
-appId
-identity
-audience
-experiment
-commerce
-landingPage
-
-Optional but strongly supported:
-
-branding
-mockup
-media
-ads
-tracking
-analytics
-deployment
-appStore
-
-⸻
-
-6. New status Field
-
-Add a root-level status field.
-
-Allowed values:
-
-draft
-ready
-validating
-paused
-winner
-killed
-built
-
-Purpose:
-
-* helps n8n know what stage the app package is in
-* helps dashboards categorize experiments
-* helps avoid accidentally launching incomplete packages
-
-Example:
-
-"status": "draft"
-
-⸻
-
-7. New experiment Section
-
-Add top-level experiment.
-
-This is important because the real product is not just the app — it is the validation test.
-
-Example:
-
+```json
 "experiment": {
-  "experimentName": "Focus Timer Paid Download Test",
-  "hypothesis": "Busy iPhone users will click a paid App Store CTA for a simple focus timer if the landing page clearly shows the benefit.",
-  "successCriteria": {
-    "minimumEmailConversionRate": 0.08,
-    "minimumBuyNowClickRate": 0.03,
-    "minimumVisitors": 300
-  },
+  "experimentName": "Habit Stack — Q2 2026 Validation",
+  "hypothesis": "We believe [audience] will [action] because [reason].",
+  "successCriteria": [
+    "Cost per email signup below $5",
+    "Buy Now click rate above 2%",
+    "At least 200 unique landing page visitors"
+  ],
   "testBudget": {
     "currency": "USD",
-    "amount": 100
+    "amount": 750,
+    "durationDays": 14
   },
   "decisionRules": {
-    "winner": "If Buy Now click rate is above 3% after at least 300 visitors.",
-    "kill": "If Buy Now click rate is below 1% after 300 visitors.",
-    "iterate": "If emails are strong but Buy Now clicks are weak."
+    "winnerThreshold": "CPA below $8 AND trial start rate above 15% after min sample size",
+    "killThreshold": "CPA above $20 after 50% of budget spent with fewer than 10 signups",
+    "minSampleSize": 200,
+    "notes": "Pause for manual review if inconclusive at day 10."
   }
 }
+```
 
-Purpose:
+Not shipped: prose-only `decisionRules` (`winner` / `kill` / `iterate`) or numeric-object `successCriteria` from early plan drafts.
 
-* defines what success means before running ads
-* makes dashboard decisions easier
-* prevents vague validation
-* helps compare app ideas objectively
+### Landing page copy sources
 
-⸻
+| `source` | Use |
+|----------|-----|
+| `inline` | Short copy in `app.json` — minimal packages |
+| `file` | Markdown in `copy/*.md` — full packages |
+| `media` | Screenshot carousel from `media.screenshots` |
 
-8. Updated mockup Section
+Example screenshots section:
 
-The mockup section should support both source-project information and deployed preview information.
+```json
+{ "id": "screenshots", "enabled": true, "source": "media" }
+```
 
-Example:
+### Mockup (React/Vite JSX)
 
+Paths are relative to the **package root**:
+
+```json
 "mockup": {
   "type": "interactive",
   "sourcePath": "mockup/",
   "framework": "react-vite",
-  "entryPoint": "src/App.jsx",
+  "entryPoint": "mockup/src/App.jsx",
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "deployCommand": null,
-  "previewUrl": null,
-  "notes": "This mockup controls its own iPhone-style dimensions and should be embedded by URL."
+  "deployCommand": "npx vercel deploy --prod",
+  "previewUrl": null
 }
+```
 
-Purpose:
+`devCommand` is for local preview. `installCommand`, `buildCommand`, and `deployCommand` are for automation (Phase 2+).
 
-* supports your current JSX/Vite mockup projects
-* lets n8n know where the mockup lives
-* lets n8n deploy the mockup first
-* gives landing pages the final iframe URL later
+### Branding
 
-⸻
+Shipped model uses `branding.theme` (colors, mode, font) and `branding.style` (tone enum + `styleNotes`).
 
-9. New deployment Section
+Not shipped: preset theme enums (`liquid-glass`, `apple-light`, etc.) on `theme.style`. Visual presets belong in `styleNotes` or future minor versions if needed.
 
-Add top-level deployment.
+### ads.utmTemplate
 
-Example:
+Prefer structured object:
 
-"deployment": {
-  "mockupUrl": null,
-  "landingPageUrl": null,
-  "githubRepoUrl": null,
-  "vercelProjectId": null,
-  "vercelDeploymentUrl": null,
-  "lastDeployedAt": null
+```json
+"utmTemplate": {
+  "source": "facebook",
+  "medium": "paid_social",
+  "campaign": "{{appId}}-validation"
 }
+```
 
-Purpose:
+Legacy query string form remains valid for backward compatibility.
 
-* stores generated URLs and platform IDs
-* supports n8n/Vercel workflow state
-* helps dashboards link back to live experiments
-* prevents deployment info from being scattered across workflow history only
+---
 
-⸻
+## app.json top-level structure (1.1.0)
 
-10. New Optional appStore Section
-
-Reserve an optional appStore section.
-
-Example:
-
-"appStore": {
-  "appStoreUrl": null,
-  "subtitle": "",
-  "keywords": [],
-  "promotionalText": "",
-  "description": "",
-  "supportUrl": "",
-  "privacyPolicyUrl": ""
+```json
+{
+  "specVersion": "1.1.0",
+  "appId": "your-app-id",
+  "status": "draft",
+  "identity": {},
+  "audience": {},
+  "commerce": {},
+  "landingPage": {},
+  "branding": {},
+  "mockup": {},
+  "media": {},
+  "ads": {},
+  "tracking": {},
+  "analytics": {},
+  "experiment": {},
+  "deployment": {},
+  "appStore": {}
 }
+```
 
-Purpose:
+Only the first seven sections (through `landingPage`) are required by JSON Schema.
 
-* future App Store listing generation
-* future App Store button behavior
-* future SEO and paid ad consistency
-* not required for Phase 1 validation
+---
 
-⸻
+## status lifecycle
 
-11. identity Section
+| Value | Meaning |
+|-------|---------|
+| `draft` | Work in progress |
+| `ready` | Complete; awaiting validation kickoff |
+| `validating` | Active experiment |
+| `paused` | Temporarily stopped |
+| `winner` | Met success criteria |
+| `killed` | Failed kill criteria |
+| `built` | Shipped to production |
 
-Example:
+New packages start as `draft`. Automation sets `validating`, writes `deployment` URLs, and may set `winner` or `killed`.
 
-"identity": {
-  "appName": "Focus Timer Pro",
-  "tagline": "A cleaner way to focus on your iPhone.",
-  "description": "A simple iOS-style focus timer designed to help users stay productive without clutter.",
-  "category": "productivity",
-  "categoryLabel": "Productivity",
-  "platform": "ios",
-  "tags": ["focus", "timer", "productivity", "iphone"]
-}
+---
 
-Notes:
+## Validation profiles
 
-* appId is stable and should not change.
-* appName can change.
-* category should support enums plus "other".
-* categoryLabel allows human-readable flexibility.
+### Minimal (`examples/minimal-app/`)
 
-⸻
+- `app.json` only — Focus Timer, `status: draft`, `specVersion: 1.1.0`
+- Inline `hero` and `cta` sections
+- No `experiment`, `media`, `mockup`, or optional sections
 
-12. audience Section
+### Full (`examples/full-app/`)
 
-Example:
+- Habit Stack — all sections, `status: ready`
+- File-based copy, `screenshots` via `source: "media"`, structured UTM, full `experiment`
+- Placeholder READMEs in `media/` and `mockup/` (no binaries or mockup code in repo)
 
-"audience": {
-  "primary": "iPhone users who want a simple way to stay focused.",
-  "secondary": "Students, remote workers, and creators.",
-  "painPoints": [
-    "Most productivity apps are too bloated.",
-    "People want focus tools that are fast and simple."
-  ],
-  "personas": [
-    {
-      "name": "Busy Remote Worker",
-      "summary": "Needs short focus sessions without a complicated productivity system."
-    }
-  ]
-}
+---
 
-⸻
+## Canonical documents
 
-13. commerce Section
+| Document | Purpose |
+|----------|---------|
+| [APP_PACKAGE_SPEC.md](APP_PACKAGE_SPEC.md) | Normative field reference |
+| [schemas/app.schema.json](schemas/app.schema.json) | Machine-readable JSON Schema |
+| [README.md](README.md) | Repo overview and quick start |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [docs/design-philosophy.md](docs/design-philosophy.md) | Design decisions and tradeoffs |
+| [docs/workflow.md](docs/workflow.md) | Pipeline stages → spec fields |
+| [docs/n8n-integration-notes.md](docs/n8n-integration-notes.md) | Drive layout, parsing, write-back |
+| [docs/naming-conventions.md](docs/naming-conventions.md) | `appId`, paths, filenames |
+| [docs/versioning.md](docs/versioning.md) | Semver policy and 1.0→1.1 migration |
 
-Example:
+---
 
-"commerce": {
-  "pricing": {
-    "model": "paid",
-    "currency": "USD",
-    "amount": 4.99,
-    "period": null,
-    "trialDays": null
-  },
-  "cta": {
-    "primaryText": "Get it on the App Store",
-    "secondaryText": "See it in action",
-    "buyNowText": "Buy on the App Store",
-    "waitlistText": "Notify Me"
-  }
-}
+## Known gaps (deferred to Phase 2)
 
-Important:
+These are documented but **not enforced by JSON Schema** in Phase 1:
 
-CTA text must be configurable.
+- `experiment` required when `status` is `ready` or `validating`
+- At least `hero` + `cta` enabled in `landingPage`
+- `source: "media"` must pair with `id: "screenshots"` and non-empty `media.screenshots`
+- Referenced files and media paths must exist on Drive
 
-The system should not hardcode:
+Phase 2 validator CLI will enforce these rules.
 
-Early Access
-Coming Soon
-Buy Now
-Get Started
+---
 
-Those should all come from config.
+## Out of scope (Phase 2+)
 
-⸻
+Not built in Phase 1:
 
-14. branding Section
+- Validator CLI
+- n8n workflow JSON
+- Landing page generator
+- Vercel deployment scripts
+- Facebook ad publisher
+- Analytics dashboard
+- Real mockup deployment
+- Real image assets in examples
 
-Example:
+`deployCommand` values in `app.json` are **config metadata** for future automation, not runnable deploy logic in this repo.
 
-"branding": {
-  "theme": {
-    "mode": "light",
-    "style": "liquid-glass",
-    "primaryColor": "#6D5DFB",
-    "accentColor": "#A855F7",
-    "fontFamily": "system"
-  },
-  "style": {
-    "tone": "professional",
-    "styleNotes": "Apple-inspired, premium, sleek, modern, minimal."
-  }
-}
+---
 
-Supported styles should include:
+## Future pipeline (context)
 
-liquid-glass
-apple-light
-apple-dark
-aurora
-black-titanium
-minimal-white
-custom
+The App Package is the source of truth. A future n8n pipeline will:
 
-⸻
+```txt
+Read App Package (Google Drive)
+  → Validate app.json and required files
+  → Deploy mockup app
+  → Generate landing page
+  → Deploy landing page to Vercel
+  → Create Facebook ad assets
+  → Track emails and Buy Now clicks
+  → Feed metrics into analytics dashboard
+  → Decide: build, kill, pause, or continue validating
+```
 
-15. media Section
-
-Example:
-
-"media": {
-  "icon": {
-    "path": "media/icon.png",
-    "alt": "Focus Timer Pro app icon"
-  },
-  "logo": {
-    "path": "media/logo.png",
-    "alt": "Focus Timer Pro logo"
-  },
-  "ogImage": {
-    "path": "media/og-image.png",
-    "alt": "Focus Timer Pro preview image"
-  },
-  "screenshots": [
-    {
-      "path": "media/screenshots/01-home.png",
-      "alt": "Focus timer home screen",
-      "title": "Start focused sessions",
-      "description": "Launch a timer in seconds."
-    },
-    {
-      "path": "media/screenshots/02-stats.png",
-      "alt": "Focus stats screen",
-      "title": "Track progress",
-      "description": "See daily focus streaks and session history."
-    }
-  ],
-  "demoVideo": null
-}
-
-Important:
-
-* do not assume exactly 3 or 4 screenshots
-* screenshots should be dynamic
-* each screenshot can have title, description, alt text, and path
-
-⸻
-
-16. landingPage Section
-
-Example:
-
-"landingPage": {
-  "slug": "focus-timer-pro",
-  "seo": {
-    "title": "Focus Timer Pro - A Cleaner Way to Focus",
-    "description": "A simple iPhone focus timer for people who want less clutter and more productivity.",
-    "keywords": ["focus timer", "productivity app", "iphone timer"]
-  },
-  "sections": [
-    {
-      "id": "hero",
-      "enabled": true,
-      "source": "file",
-      "file": "copy/hero.md"
-    },
-    {
-      "id": "features",
-      "enabled": true,
-      "source": "file",
-      "file": "copy/features.md"
-    },
-    {
-      "id": "screenshots",
-      "enabled": true,
-      "source": "media"
-    },
-    {
-      "id": "pricing",
-      "enabled": true,
-      "source": "inline"
-    },
-    {
-      "id": "faq",
-      "enabled": false,
-      "source": "file",
-      "file": "copy/faq.md"
-    }
-  ]
-}
-
-Important:
-
-* sections should be ordered
-* sections should be enable/disable configurable
-* sections should support inline copy or file-based markdown
-* this allows different app landing pages without code changes
-
-⸻
-
-17. ads Section
-
-Example:
-
-"ads": {
-  "campaignName": "Focus Timer Pro Validation Test",
-  "objective": "traffic",
-  "platforms": ["facebook", "instagram"],
-  "headlines": [
-    "A cleaner way to focus on your iPhone",
-    "Simple focus sessions without clutter",
-    "Stay productive with a beautiful timer app"
-  ],
-  "primaryTexts": [
-    "Most productivity apps are too complicated. Focus Timer Pro keeps it simple.",
-    "Try a cleaner focus timer designed for iPhone users."
-  ],
-  "descriptions": [
-    "Validate your interest today.",
-    "Simple, focused, and built for iPhone."
-  ],
-  "callToAction": "LEARN_MORE",
-  "utmTemplate": {
-    "source": "facebook",
-    "medium": "paid_social",
-    "campaign": "{{appId}}-validation"
-  }
-}
-
-⸻
-
-18. tracking Section
-
-Example:
-
-"tracking": {
-  "webhooks": {
-    "validationComplete": null,
-    "deployComplete": null,
-    "emailCaptured": null,
-    "buyNowClicked": null
-  },
-  "events": [
-    {
-      "name": "email_captured",
-      "description": "User submitted email on landing page."
-    },
-    {
-      "name": "buy_now_clicked",
-      "description": "User entered email and clicked the Buy Now/App Store CTA."
-    }
-  ]
-}
-
-Important metadata to eventually collect:
-
-email
-appId
-experimentId
-eventName
-price
-pageUrl
-referrer
-utm_source
-utm_medium
-utm_campaign
-utm_content
-timestamp
-anonymousVisitorId
-sessionId
-device/browser info
-
-⸻
-
-19. analytics Section
-
-Example:
-
-"analytics": {
-  "projectId": "focus-timer-pro",
-  "experimentId": "focus-timer-paid-test-001",
-  "funnelName": "paid-traffic-validation",
-  "customDimensions": {
-    "category": "productivity",
-    "platform": "ios"
-  }
-}
-
-Purpose:
-
-* dashboard grouping
-* experiment comparison
-* cross-channel reporting
-* metrics attribution
-
-⸻
-
-20. Minimal App Package
-
-Smallest useful valid package:
-
-minimal-app/
-├── app.json
-└── README.md
-
-Characteristics:
-
-* inline landing page copy
-* no media required
-* no mockup required
-* no ads required
-* no webhook URLs required
-* enough to render a simple validation page
-
-⸻
-
-21. Full App Package
-
-Complete automation-ready package:
-
-full-app/
-├── app.json
-├── copy/
-│   ├── hero.md
-│   ├── features.md
-│   └── faq.md
-├── media/
-│   ├── icon.png
-│   ├── logo.png
-│   ├── og-image.png
-│   └── screenshots/
-│       ├── 01-home.png
-│       ├── 02-feature.png
-│       └── 03-pricing.png
-├── mockup/
-│   ├── package.json
-│   ├── src/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── README.md
-└── README.md
-
-For Phase 1 examples, real binaries and mockup code are not required. Placeholder READMEs are acceptable.
-
-⸻
-
-22. Schema Strategy
-
-Use JSON Schema Draft 2020-12.
-
-Schema should:
-
-* require core fields
-* define enums for stable values
-* allow optional advanced sections
-* reject unknown fields where stable
-* allow extension-friendly areas like customDimensions
-* include descriptions for fields
-* prepare for a future validator CLI
-
-Use:
-
-"$schema": "https://json-schema.org/draft/2020-12/schema"
-
-⸻
-
-23. Versioning Strategy
-
-Every app.json must include:
-
-"specVersion": "1.0.0"
-
-Rules:
-
-* Patch version: wording/docs/schema clarification without breaking packages
-* Minor version: backward-compatible new optional fields
-* Major version: breaking schema change
-
-Docs should explain:
-
-* app package version vs repo version
-* migration expectations
-* how n8n should handle old versions later
-
-⸻
-
-24. n8n Integration Notes
-
-docs/n8n-integration-notes.md should explain:
-
-* n8n should read app.json first
-* n8n should treat app.json as the source of truth
-* n8n should not parse README as trusted config
-* n8n may read markdown files referenced by landingPage.sections
-* n8n should validate package before deployment
-* n8n should deploy mockup before landing page
-* n8n should write deployment URLs back into deployment
-* n8n should insert webhook URLs into tracking.webhooks
-* n8n should fail early if required files are missing
-
-⸻
-
-25. Design Tradeoffs
-
-JSON vs Markdown
-
-Use JSON for structure.
-
-Use Markdown for long copy.
-
-Reason:
-
-* JSON is machine-readable
-* Markdown is human-friendly
-* n8n can parse JSON reliably
-* AI can generate both
-
-App Package as CMS
-
-The Google Drive folder should behave like a simple CMS.
-
-Each app package contains everything needed to validate that idea.
-
-Source of Truth
-
-app.json is the source of truth.
-
-README files are for humans only.
-
-AI Role
-
-AI should help generate or improve content, but deterministic workflows should consume structured fields.
-
-⸻
-
-26. Phase 1 Implementation Steps
-
-Step A — Contract Core
-
-Update or create:
-
-README.md
-APP_PACKAGE_SPEC.md
-schemas/app.schema.json
-templates/app.json
-CHANGELOG.md
-
-Step A should include all improved schema sections:
-
-status
-experiment
-deployment
-appStore
-updated mockup structure
-
-Step B — Templates and Examples
-
-Update or create:
-
-templates/copy/hero.md
-templates/copy/features.md
-templates/copy/faq.md
-examples/minimal-app/
-examples/full-app/
-
-Examples must reflect the improved schema.
-
-Step C — Supporting Docs
-
-Update or create:
-
-docs/design-philosophy.md
-docs/workflow.md
-docs/n8n-integration-notes.md
-docs/naming-conventions.md
-docs/versioning.md
-
-⸻
-
-27. Out of Scope for Phase 1
-
-Do not build yet:
-
-validator CLI
-n8n workflows
-landing page generator
-Vercel deployment scripts
-Facebook ad publisher
-dashboard
-real mockup deployment
-real image assets
-
-⸻
-
-28. Cursor Implementation Instruction
-
-Cursor should update the existing repo, not create a new nested folder.
-
-It should preserve current files where possible, but update them to match this improved Phase 1 spec.
-
-Start with Step A only unless explicitly told to continue.
-
-After Step A, summarize:
-
-files updated
-schema sections added
-important assumptions
-what remains for Step B and Step C
+See [docs/workflow.md](docs/workflow.md) for stage-by-stage field mapping.
