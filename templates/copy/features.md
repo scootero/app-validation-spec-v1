@@ -11,6 +11,8 @@ List the key features of your app. Reference this file from `app.json`:
 }
 ```
 
+For app screenshots on the landing page, use `media.screenshots` in `app.json` and a section like `{ "id": "screenshots", "enabled": true, "source": "media" }`.
+
 ## Feature 1
 
 **Title:** Short feature name

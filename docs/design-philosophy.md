@@ -28,14 +28,15 @@ Long-form prose lives in `copy/*.md`, not inside JSON strings, so the manifest s
 
 ## Why inline and file-based copy coexist
 
-Landing page content can be declared two ways via `landingPage.sections[].source`:
+Landing page content can be declared three ways via `landingPage.sections[].source`:
 
 | Source | Best for |
 |--------|----------|
 | `inline` | Minimal packages, quick drafts, short hero/cta blocks |
 | `file` | Full packages, AI-generated markdown, collaborative copy editing |
+| `media` | Screenshot carousels — pulls from `media.screenshots` with optional title/description captions |
 
-This avoids forcing a `copy/` folder on every idea while keeping full packages from bloating `app.json`.
+This avoids forcing a `copy/` folder on every idea while keeping full packages from bloating `app.json`. Screenshot paths and captions live in `media.screenshots`; the landing page only references them with `{ "id": "screenshots", "source": "media" }`.
 
 ## Section grouping
 
@@ -52,7 +53,7 @@ This avoids forcing a `copy/` folder on every idea while keeping full packages f
 
 - Root scalars: `specVersion`, `appId`, `status`
 - Core authoring sections: `identity`, `audience`, `commerce`, `landingPage`
-- Enums for `status`, `platform`, `pricing.model`, section `id`
+- Enums for `status`, `platform`, `pricing.model`, section `id`, section `source`
 - `additionalProperties: false` on section objects to catch typos early
 
 ### Flexible where categories diverge
@@ -85,9 +86,13 @@ Automation writes back URLs and platform IDs after deploy steps:
 
 - `deployment.mockupUrl` and `mockup.previewUrl` should match after mockup deploy
 - `deployment.landingPageUrl` is set after Vercel deploy
+- `deployment.vercelDeploymentUrl` records the latest Vercel deployment URL (may differ from the canonical landing page URL)
 - `deployment.vercelProjectId` and `deployment.githubRepoUrl` link to infrastructure
+- `deployment.lastDeployedAt` is an ISO 8601 timestamp of the most recent deploy
 
-All are nullable in new packages. n8n owns write-back; humans should not hand-edit these except for recovery.
+Mockup authoring uses `installCommand` and `devCommand` for local setup and preview; `buildCommand` and `deployCommand` run in automation.
+
+All deployment fields are nullable in new packages. n8n owns write-back; humans should not hand-edit these except for recovery.
 
 ## status as the pipeline state machine
 
@@ -112,6 +117,10 @@ Automation may set `validating`, `winner`, and `killed`. Humans set `draft`, `re
 - `specVersion` in every `app.json` pins the contract
 - Breaking changes increment major; new optional fields increment minor
 - The repo and the spec version are related but not identical — see [versioning.md](versioning.md)
+
+## ads.utmTemplate: string vs object
+
+Spec 1.1.0 introduced a structured `ads.utmTemplate` object (`source`, `medium`, `campaign`, `content`, `term`). The legacy string form remains valid for backward compatibility. New packages should prefer the object — it is easier for n8n to expand and less error-prone than parsing query strings.
 
 ## What we explicitly deferred
 

@@ -89,7 +89,9 @@ Use lowercase filenames. Additional copy files are allowed if referenced from `l
 | `media/demo.mp4` | Demo video |
 | `media/screenshots/01-home.png` | Numbered screenshots |
 
-Screenshot rules:
+Screenshot metadata (`title`, `description`, `alt`) is declared in `app.json` → `media.screenshots[]`, not in filenames.
+
+Screenshot file rules:
 
 - Two-digit numeric prefix: `01-`, `02-`, …
 - Descriptive kebab-case suffix after prefix
@@ -99,10 +101,11 @@ Screenshot rules:
 
 | File | Convention |
 |------|------------|
-| `mockup/index.html` | Default entry point |
+| `mockup/src/App.jsx` | Common entry point for React/Vite mockups |
+| `mockup/index.html` | Static HTML entry point |
 | `mockup/package.json` | If using a JS toolchain |
 
-Declare actual entry in `mockup.entryPoint`.
+Declare actual entry in `mockup.entryPoint`. Use `installCommand` and `devCommand` for local setup; `buildCommand` and `deployCommand` for automation.
 
 ## landingPage.slug
 
@@ -137,6 +140,31 @@ No spaces, no hyphens, no uppercase.
 - Should be unique per validation run
 - Example: `habit-stack-q2-validation`
 
+## ads.platforms
+
+Use lowercase enum values from the schema:
+
+- `facebook`, `instagram`, `google`, `tiktok`, `twitter`, `linkedin`
+
+List only platforms you intend to run ads on.
+
+## ads.utmTemplate
+
+Prefer the structured object form (since 1.1.0):
+
+```json
+{
+  "source": "facebook",
+  "medium": "paid_social",
+  "campaign": "{{appId}}-validation",
+  "content": "{{headline_variant}}"
+}
+```
+
+Legacy string form is still valid: `"utm_source=facebook&utm_medium=paid_social&utm_campaign={{appId}}-validation"`.
+
+Placeholders: `{{appId}}`, `{{headline_variant}}` (expand in n8n before ad creation).
+
 ## experiment.experimentName
 
 Human-readable — any casing allowed:
@@ -147,7 +175,7 @@ Human-readable — any casing allowed:
 ## specVersion
 
 - Strict semver: `MAJOR.MINOR.PATCH`
-- Current: `1.0.0`
+- Current: `1.1.0`
 - Do not use pre-release tags in `app.json` (`1.0.0-beta` is invalid)
 
 ## Template _comment keys

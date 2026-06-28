@@ -309,10 +309,20 @@
           "type": "string",
           "description": "Entry file relative to package root, e.g. mockup/index.html."
         },
+        "installCommand": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Shell command to install mockup dependencies, e.g. npm install."
+        },
         "buildCommand": {
           "type": "string",
           "maxLength": 200,
           "description": "Shell command to build the mockup before deploy."
+        },
+        "devCommand": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Shell command to run the mockup locally for preview."
         },
         "deployCommand": {
           "type": "string",
@@ -340,6 +350,16 @@
           "description": "Path relative to package root."
         },
         "alt": { "type": "string", "maxLength": 200 },
+        "title": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Optional caption title, commonly used for screenshots."
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional caption description, commonly used for screenshots."
+        },
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 }
       }
@@ -366,12 +386,13 @@
       "properties": {
         "id": {
           "type": "string",
-          "enum": ["hero", "features", "socialProof", "pricing", "faq", "cta", "footer"]
+          "enum": ["hero", "features", "screenshots", "socialProof", "pricing", "faq", "cta", "footer"]
         },
         "enabled": { "type": "boolean" },
         "source": {
           "type": "string",
-          "enum": ["inline", "file"]
+          "enum": ["inline", "file", "media"],
+          "description": "inline: copy in section object; file: markdown path; media: pull from media.screenshots."
         },
         "inline": {
           "type": "object",
@@ -469,10 +490,58 @@
             "SUBSCRIBE"
           ]
         },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["facebook", "instagram", "google", "tiktok", "twitter", "linkedin"]
+          },
+          "minItems": 1,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "description": "Paid social or ad platforms for this campaign."
+        },
         "utmTemplate": {
+          "description": "UTM parameters for campaign links. Prefer the structured object form.",
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 500,
+              "description": "Legacy query string form, e.g. utm_source=facebook&utm_campaign={{appId}}."
+            },
+            { "$ref": "#/$defs/utmTemplateObject" }
+          ]
+        }
+      }
+    },
+    "utmTemplateObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "source": {
           "type": "string",
-          "maxLength": 500,
-          "description": "UTM query string template with placeholders, e.g. utm_source=facebook&utm_campaign={{appId}}."
+          "maxLength": 50,
+          "description": "utm_source value. May use {{appId}} placeholder."
+        },
+        "medium": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "utm_medium value."
+        },
+        "campaign": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "utm_campaign value. May use {{appId}} placeholder."
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Optional utm_content value."
+        },
+        "term": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Optional utm_term value."
         }
       }
     },
@@ -597,7 +666,17 @@
         "mockupUrl": { "type": ["string", "null"], "format": "uri" },
         "landingPageUrl": { "type": ["string", "null"], "format": "uri" },
         "vercelProjectId": { "type": ["string", "null"], "maxLength": 100 },
-        "githubRepoUrl": { "type": ["string", "null"], "format": "uri" }
+        "vercelDeploymentUrl": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "description": "Latest Vercel deployment URL for the landing page."
+        },
+        "githubRepoUrl": { "type": ["string", "null"], "format": "uri" },
+        "lastDeployedAt": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of the most recent deploy. Null until first deploy."
+        }
       }
     },
     "appStore": {
@@ -613,7 +692,9 @@
         },
         "promotionalText": { "type": "string", "maxLength": 170 },
         "description": { "type": "string", "maxLength": 4000 },
-        "appStoreUrl": { "type": ["string", "null"], "format": "uri" }
+        "appStoreUrl": { "type": ["string", "null"], "format": "uri" },
+        "supportUrl": { "type": "string", "format": "uri" },
+        "privacyPolicyUrl": { "type": "string", "format": "uri" }
       }
     }
   }

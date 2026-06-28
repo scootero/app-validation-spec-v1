@@ -1,6 +1,6 @@
 # App Package Specification
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Status:** Normative  
 **Schema:** [schemas/app.schema.json](schemas/app.schema.json)
 
@@ -41,7 +41,7 @@ Paths in `app.json` are relative to the package root unless noted otherwise.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `specVersion` | Yes | Semver of this specification (currently `1.0.0`) |
+| `specVersion` | Yes | Semver of this specification (currently `1.0.0` or `1.1.0`) |
 | `appId` | Yes | Stable kebab-case identifier; matches folder name |
 | `status` | Yes | Lifecycle state (see [Status lifecycle](#status-lifecycle)) |
 
@@ -179,8 +179,10 @@ Supports both **source project info** (for building and deploying the interactiv
 | `type` | No | enum | `static`, `prototype`, `interactive` |
 | `sourcePath` | No | string | Path to mockup source folder (e.g. `mockup/`) |
 | `framework` | No | string | e.g. `react`, `vue`, `html-static` |
-| `entryPoint` | No | string | Entry file (e.g. `mockup/index.html`) |
+| `entryPoint` | No | string | Entry file (e.g. `mockup/src/App.jsx`) |
+| `installCommand` | No | string | Dependency install command (e.g. `npm install`) |
 | `buildCommand` | No | string | Shell command to build before deploy |
+| `devCommand` | No | string | Shell command to run mockup locally |
 | `deployCommand` | No | string | Shell command to deploy the mockup |
 | `previewUrl` | No | string \| null | Live preview URL; `null` until deployed |
 | `notes` | No | string | Build/deploy notes |
@@ -201,7 +203,9 @@ Asset references. Each asset is an object with at least `path` (relative to pack
 | `screenshots` | mediaAsset[] | Up to 10 screenshots |
 | `demoVideo` | mediaAsset | Product demo video |
 
-**mediaAsset:** `{ path, alt?, width?, height? }`
+**mediaAsset:** `{ path, alt?, title?, description?, width?, height? }`
+
+`title` and `description` are optional captions commonly used on screenshot carousel sections.
 
 ---
 
@@ -219,14 +223,20 @@ Defines landing page structure, section order, and where copy lives.
 
 | Field | Required | Type | Notes |
 |-------|----------|------|-------|
-| `id` | Yes | enum | `hero`, `features`, `socialProof`, `pricing`, `faq`, `cta`, `footer` |
+| `id` | Yes | enum | `hero`, `features`, `screenshots`, `socialProof`, `pricing`, `faq`, `cta`, `footer` |
 | `enabled` | Yes | boolean | Whether to render this section |
-| `source` | Yes | enum | `inline` or `file` |
+| `source` | Yes | enum | `inline`, `file`, or `media` |
 | `inline` | If enabled + inline | object | `{ headline?, subheadline?, body? }` |
 | `file` | If enabled + file | string | Path to markdown (e.g. `copy/hero.md`) |
 
+When `source` is `media`, the section pulls from `media.screenshots` — no `inline` or `file` field is needed. Example:
+
+```json
+{ "id": "screenshots", "enabled": true, "source": "media" }
+```
+
 **Minimal packages** use `source: "inline"` for `hero` and `cta` only.  
-**Full packages** reference `copy/*.md` files for long-form content.
+**Full packages** reference `copy/*.md` files for long-form content and may include a `screenshots` section with `source: "media"`.
 
 ---
 
@@ -238,11 +248,34 @@ Facebook and paid social ad copy. All fields optional; populate before `validati
 |-------|------|-------|
 | `campaignName` | string | Internal campaign identifier |
 | `objective` | enum | `awareness`, `traffic`, `conversions`, `leads`, `app-installs` |
+| `platforms` | string[] | Ad platforms: `facebook`, `instagram`, `google`, `tiktok`, `twitter`, `linkedin` |
 | `headlines` | string[] | Up to 5 variants (≤40 chars each) |
 | `primaryTexts` | string[] | Up to 5 variants (≤125 chars each) |
 | `descriptions` | string[] | Up to 5 variants (≤90 chars each) |
 | `callToAction` | enum | `LEARN_MORE`, `SHOP_NOW`, `SIGN_UP`, `DOWNLOAD`, `GET_OFFER`, `SUBSCRIBE` |
-| `utmTemplate` | string | UTM query string; may use `{{appId}}` placeholder |
+| `utmTemplate` | object \| string | Structured UTM params (preferred) or legacy query string |
+
+### utmTemplate (structured)
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `source` | string | `utm_source` value; may use `{{appId}}` |
+| `medium` | string | `utm_medium` value |
+| `campaign` | string | `utm_campaign` value; may use `{{appId}}` |
+| `content` | string | Optional `utm_content` |
+| `term` | string | Optional `utm_term` |
+
+Example:
+
+```json
+"utmTemplate": {
+  "source": "facebook",
+  "medium": "paid_social",
+  "campaign": "{{appId}}-validation"
+}
+```
+
+The string form (e.g. `"utm_source=facebook&utm_medium=paid&utm_campaign={{appId}}"`) remains valid for backward compatibility but is deprecated.
 
 ---
 
@@ -324,7 +357,9 @@ Generated and deployed URLs and platform IDs. **Populated by automation** — le
 | `mockupUrl` | string \| null | Live mockup URL after deploy |
 | `landingPageUrl` | string \| null | Live landing page URL |
 | `vercelProjectId` | string \| null | Vercel project identifier |
+| `vercelDeploymentUrl` | string \| null | Latest Vercel deployment URL |
 | `githubRepoUrl` | string \| null | Source repository URL if created |
+| `lastDeployedAt` | string \| null | ISO 8601 timestamp of most recent deploy |
 
 n8n workflows should write these fields back to `app.json` on Google Drive after deploy steps complete.
 
@@ -341,6 +376,8 @@ Reserved for future App Store metadata workflows. Optional in Phase 1.
 | `promotionalText` | string | Promotional blurb (≤170 chars) |
 | `description` | string | Full store description (≤4000 chars) |
 | `appStoreUrl` | string \| null | Live App Store URL after publish |
+| `supportUrl` | string | Support page URL |
+| `privacyPolicyUrl` | string | Privacy policy URL |
 
 ---
 

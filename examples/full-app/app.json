@@ -1,5 +1,5 @@
 {
-  "specVersion": "1.0.0",
+  "specVersion": "1.1.0",
   "appId": "habit-stack",
   "status": "ready",
   "identity": {
@@ -59,9 +59,11 @@
   "mockup": {
     "type": "interactive",
     "sourcePath": "mockup/",
-    "framework": "react",
-    "entryPoint": "mockup/index.html",
+    "framework": "react-vite",
+    "entryPoint": "mockup/src/App.jsx",
+    "installCommand": "npm install",
     "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
     "deployCommand": "npx vercel deploy --prod",
     "previewUrl": null,
     "notes": "Prototype should demonstrate stack creation, daily check-in, and streak view."
@@ -71,8 +73,24 @@
     "logo": { "path": "media/logo.png", "alt": "Habit Stack logo" },
     "ogImage": { "path": "media/og-image.png", "alt": "Habit Stack — build better habits", "width": 1200, "height": 630 },
     "screenshots": [
-      { "path": "media/screenshots/01-home.png", "alt": "Today's habit stack" },
-      { "path": "media/screenshots/02-feature.png", "alt": "Streak and insights view" }
+      {
+        "path": "media/screenshots/01-home.png",
+        "alt": "Today's habit stack",
+        "title": "Your daily stack at a glance",
+        "description": "See every habit in one view and check in with a single tap."
+      },
+      {
+        "path": "media/screenshots/02-feature.png",
+        "alt": "Streak and insights view",
+        "title": "Track streaks and weekly progress",
+        "description": "Celebrate consistency with streaks and a simple Sunday summary."
+      },
+      {
+        "path": "media/screenshots/03-pricing.png",
+        "alt": "Subscription and trial screen",
+        "title": "Simple subscription",
+        "description": "7-day free trial. Cancel anytime from your account settings."
+      }
     ],
     "demoVideo": { "path": "media/demo.mp4", "alt": "Habit Stack product demo" }
   },
@@ -81,6 +99,7 @@
     "sections": [
       { "id": "hero", "enabled": true, "source": "file", "file": "copy/hero.md" },
       { "id": "features", "enabled": true, "source": "file", "file": "copy/features.md" },
+      { "id": "screenshots", "enabled": true, "source": "media" },
       {
         "id": "socialProof",
         "enabled": true,
@@ -127,6 +146,7 @@
   "ads": {
     "campaignName": "habit-stack-q2-validation",
     "objective": "conversions",
+    "platforms": ["facebook", "instagram"],
     "headlines": [
       "Build habits that actually stick",
       "Your morning routine, simplified",
@@ -143,7 +163,12 @@
       "Join thousands building better routines."
     ],
     "callToAction": "SIGN_UP",
-    "utmTemplate": "utm_source=facebook&utm_medium=paid&utm_campaign=habit-stack&utm_content={{headline_variant}}"
+    "utmTemplate": {
+      "source": "facebook",
+      "medium": "paid_social",
+      "campaign": "habit-stack-validation",
+      "content": "{{headline_variant}}"
+    }
   },
   "tracking": {
     "webhooks": {
@@ -194,13 +219,17 @@
     "mockupUrl": null,
     "landingPageUrl": null,
     "vercelProjectId": null,
-    "githubRepoUrl": null
+    "vercelDeploymentUrl": null,
+    "githubRepoUrl": null,
+    "lastDeployedAt": null
   },
   "appStore": {
     "subtitle": "Stack small habits daily",
     "keywords": ["habits", "routine", "streaks", "wellness", "morning"],
     "promotionalText": "New: Flex days for travel and rest. Keep your routine without breaking your streak guilt-free.",
     "description": "Habit Stack helps you build lasting routines by chaining small daily habits. Create morning and evening stacks, track completion in under a minute, and watch your consistency grow with streaks and weekly insights. Cross-platform sync across iOS, Android, and web. Start your 7-day free trial today.",
-    "appStoreUrl": null
+    "appStoreUrl": null,
+    "supportUrl": "https://habitstack.example.com/support",
+    "privacyPolicyUrl": "https://habitstack.example.com/privacy"
   }
 }

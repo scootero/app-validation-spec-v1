@@ -8,6 +8,7 @@ This example demonstrates the **smallest valid App Package** for early ideation.
 - `status` is `draft` — experiment and deployment sections are omitted
 - Landing page uses **inline copy** for `hero` and `cta` sections only
 - No optional sections: `branding`, `mockup`, `media`, `ads`, `tracking`, `analytics`, `experiment`, `deployment`, or `appStore`
+- No `screenshots` section — that requires `media.screenshots` and `source: "media"`
 
 ## App idea
 
@@ -25,3 +26,5 @@ In Phase 2, validate against `schemas/app.schema.json` from the repo root:
 # Example (validator not yet implemented)
 # validate-app examples/minimal-app/app.json
 ```
+
+This example uses `specVersion` **1.1.0**. Packages at **1.0.0** remain valid if they omit the new optional fields added in 1.1.0.

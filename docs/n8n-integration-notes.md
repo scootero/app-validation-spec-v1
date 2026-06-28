@@ -58,6 +58,7 @@ return [{ json: app }];
 | `$json.commerce.cta.buyNowText` | CTA button label |
 | `$json.landingPage.sections` | Section order and copy sources |
 | `$json.experiment.testBudget.amount` | Ad spend cap |
+| `$json.ads.platforms` | Target ad platforms (e.g. facebook, instagram) |
 | `$json.ads.headlines` | Ad creative variants |
 | `$json.analytics.experimentId` | Dashboard event tagging |
 
@@ -68,6 +69,13 @@ For each section where `source === "file"` and `enabled === true`:
 1. Read `$json.landingPage.sections[i].file` relative to package root
 2. Load markdown from Drive, e.g. `copy/hero.md`
 3. Pass content to landing page generator node
+
+For each section where `source === "media"` and `enabled === true`:
+
+1. Confirm `id === "screenshots"` (only supported media section in 1.1.0)
+2. Read `$json.media.screenshots` array — no separate file path on the section
+3. Download each screenshot binary from Drive using `path`
+4. Pass `path`, `alt`, `title`, and `description` to the landing page generator
 
 ### Loading media
 
@@ -105,10 +113,14 @@ Automation **writes back** to `app.json` on Drive after deploy and decision step
   "deployment": {
     "landingPageUrl": "https://focus-timer.vercel.app",
     "vercelProjectId": "prj_abc123",
-    "githubRepoUrl": "https://github.com/org/focus-timer-landing"
+    "vercelDeploymentUrl": "https://focus-timer-abc123.vercel.app",
+    "githubRepoUrl": "https://github.com/org/focus-timer-landing",
+    "lastDeployedAt": "2026-06-27T14:30:00Z"
   }
 }
 ```
+
+`landingPageUrl` is the canonical public URL. `vercelDeploymentUrl` is the latest deployment URL from Vercel and may differ during preview deploys.
 
 ### After experiment decision
 
@@ -188,13 +200,54 @@ const exp = $json.experiment;
 if (!exp?.testBudget?.amount || !exp?.hypothesis) {
   throw new Error('experiment incomplete — cannot launch ads');
 }
+
+const platforms = $json.ads?.platforms;
+if (!platforms?.length) {
+  throw new Error('ads.platforms required before launching paid social');
+}
 ```
 
 During `validating`, compare spend against `experiment.testBudget.amount` and elapsed days against `durationDays`. Pause or kill per `decisionRules`.
 
 ## UTM template expansion
 
-`ads.utmTemplate` may include placeholders. Expand before ad creation:
+`ads.utmTemplate` may be a **structured object** (preferred since 1.1.0) or a **legacy query string**. Expand before ad creation.
+
+### Structured object (preferred)
+
+```javascript
+const tpl = $json.ads.utmTemplate;
+const params = new URLSearchParams();
+
+if (typeof tpl === 'object' && tpl !== null) {
+  for (const [key, value] of Object.entries(tpl)) {
+    if (value) {
+      const utmKey = key === 'source' ? 'utm_source'
+        : key === 'medium' ? 'utm_medium'
+        : key === 'campaign' ? 'utm_campaign'
+        : key === 'content' ? 'utm_content'
+        : key === 'term' ? 'utm_term'
+        : key;
+      params.set(utmKey, String(value)
+        .replace('{{appId}}', $json.appId)
+        .replace('{{headline_variant}}', 'a'));
+    }
+  }
+} else if (typeof tpl === 'string') {
+  // Legacy string form — replace placeholders then parse
+  const expanded = tpl
+    .replace(/\{\{appId\}\}/g, $json.appId)
+    .replace(/\{\{headline_variant\}\}/g, 'a');
+  expanded.split('&').forEach(pair => {
+    const [k, v] = pair.split('=');
+    if (k && v) params.set(k, v);
+  });
+}
+
+const destination = `${$json.deployment.landingPageUrl}?${params.toString()}`;
+```
+
+### Legacy string only
 
 ```javascript
 const template = $json.ads.utmTemplate;
@@ -203,6 +256,8 @@ const utm = template
   .replace('{{headline_variant}}', 'a');
 const destination = `${$json.deployment.landingPageUrl}?${utm}`;
 ```
+
+Use the structured form in new packages. The string form remains valid for 1.0.x packages.
 
 ## Error handling
 
@@ -221,10 +276,13 @@ Read `specVersion` before validation:
 ```javascript
 const version = $json.specVersion;
 // Phase 2: select schema file for version
-// e.g. schemas/app.schema.json for 1.0.x
+// 1.0.x and 1.1.x → schemas/app.schema.json (single schema, backward compatible)
+// 2.x.x → future split schema when breaking changes ship
 ```
 
-If `specVersion` is unsupported, block the pipeline and notify — do not silently validate against the wrong schema.
+Packages at `1.0.0` remain valid against the current schema if they omit 1.1.0 optional fields. Workflows should not reject `1.0.0` packages solely for using an older `specVersion` unless a validator confirms incompatibility.
+
+If `specVersion` is unsupported (e.g. `2.0.0` before a schema exists), block the pipeline and notify — do not silently validate against the wrong schema.
 
 ## Testing without Drive
 

@@ -11,6 +11,8 @@ Replace this file with your landing page hero copy. Reference it from `app.json`
 }
 ```
 
+Screenshots are not defined here — add paths in `media.screenshots` and enable a landing page section with `"id": "screenshots", "source": "media"`.
+
 ## Headline
 
 Your main headline goes here. Keep it under 120 characters.

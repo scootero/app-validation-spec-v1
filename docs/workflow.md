@@ -58,6 +58,7 @@ flowchart TD
 - Referenced files exist on Drive
 - `experiment` fully populated when `status` is `ready` or `validating`
 - At least `hero` and `cta` sections enabled in `landingPage`
+- Sections with `source: "media"` require `media.screenshots` with at least one entry
 - Media paths resolvable (if `media` section present)
 - `mockup.entryPoint` resolvable (if `mockup` section present)
 
@@ -83,7 +84,7 @@ flowchart TD
 
 **Read from `mockup`:**
 - `sourcePath`, `framework`, `entryPoint`
-- `buildCommand`, `deployCommand`
+- `installCommand`, `buildCommand`, `devCommand`, `deployCommand`
 
 **Write back:**
 - `mockup.previewUrl`
@@ -100,8 +101,9 @@ flowchart TD
 **Goal:** Produce a premium landing page from package content.
 
 **Inputs:**
-- `landingPage.sections` — order, enabled flags, inline vs file copy
+- `landingPage.sections` — order, enabled flags, inline vs file vs media copy
 - `copy/*.md` — long-form markdown sections
+- `media.screenshots` — rendered when a section has `id: "screenshots"` and `source: "media"`
 - `commerce` — pricing display, CTA labels
 - `branding` — colors, tone
 - `media` — icons, screenshots, og image
@@ -123,7 +125,9 @@ flowchart TD
 **Write back:**
 - `deployment.landingPageUrl`
 - `deployment.vercelProjectId`
+- `deployment.vercelDeploymentUrl`
 - `deployment.githubRepoUrl` (if a repo is created)
+- `deployment.lastDeployedAt` (ISO 8601 timestamp)
 
 **On success:** Fire `tracking.webhooks.deployComplete` (if set).
 
@@ -137,9 +141,9 @@ flowchart TD
 **Goal:** Launch paid social campaigns to drive traffic to the landing page.
 
 **Read from `ads`:**
-- `campaignName`, `objective`
+- `campaignName`, `objective`, `platforms`
 - `headlines`, `primaryTexts`, `descriptions`
-- `callToAction`, `utmTemplate`
+- `callToAction`, `utmTemplate` (structured object or legacy string)
 
 **Also use:**
 - `deployment.landingPageUrl` as destination
@@ -163,7 +167,7 @@ flowchart TD
 - `buy_now_clicked` → `tracking.webhooks.buyNowClicked`
 - Custom events from `tracking.events`
 
-**Attribution:** Use `ads.utmTemplate` and `analytics.experimentId` for dashboard routing.
+**Attribution:** Expand `ads.utmTemplate` (object or string) and tag events with `analytics.experimentId` for dashboard routing.
 
 | Spec fields | Role |
 |-------------|------|

@@ -1,6 +1,6 @@
 {
   "_comment": "TEMPLATE ONLY — remove all _comment keys from real app packages. Copy this file to your App Package folder as app.json.",
-  "specVersion": "1.0.0",
+  "specVersion": "1.1.0",
   "appId": "your-app-id",
   "status": "draft",
   "identity": {
@@ -60,9 +60,11 @@
     "_comment": "Source project info and deployed preview. previewUrl is written by automation.",
     "type": "interactive",
     "sourcePath": "mockup/",
-    "framework": "react",
-    "entryPoint": "mockup/index.html",
+    "framework": "react-vite",
+    "entryPoint": "mockup/src/App.jsx",
+    "installCommand": "npm install",
     "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
     "deployCommand": "npx vercel deploy --prod",
     "previewUrl": null,
     "notes": "Optional notes for the mockup build and deploy pipeline."
@@ -73,13 +75,23 @@
     "logo": { "path": "media/logo.png", "alt": "App logo" },
     "ogImage": { "path": "media/og-image.png", "alt": "Social share image" },
     "screenshots": [
-      { "path": "media/screenshots/01-home.png", "alt": "Home screen" },
-      { "path": "media/screenshots/02-feature.png", "alt": "Key feature" }
+      {
+        "path": "media/screenshots/01-home.png",
+        "alt": "Home screen",
+        "title": "Start focused sessions",
+        "description": "Launch a timer in seconds."
+      },
+      {
+        "path": "media/screenshots/02-feature.png",
+        "alt": "Key feature",
+        "title": "Track progress",
+        "description": "See daily streaks and session history."
+      }
     ],
     "demoVideo": { "path": "media/demo.mp4", "alt": "Product demo video" }
   },
   "landingPage": {
-    "_comment": "Section order matters. Use source:inline for minimal packages or source:file for copy/*.md",
+    "_comment": "Section order matters. Use source:inline for minimal packages, source:file for copy/*.md, source:media for screenshots.",
     "slug": "your-app-id",
     "sections": [
       {
@@ -93,6 +105,11 @@
         "enabled": true,
         "source": "file",
         "file": "copy/features.md"
+      },
+      {
+        "id": "screenshots",
+        "enabled": true,
+        "source": "media"
       },
       {
         "id": "socialProof",
@@ -146,6 +163,7 @@
     "_comment": "Facebook / paid social copy variants",
     "campaignName": "your-app-id-launch",
     "objective": "conversions",
+    "platforms": ["facebook", "instagram"],
     "headlines": [
       "Headline variant A",
       "Headline variant B",
@@ -160,7 +178,11 @@
       "Alternate description."
     ],
     "callToAction": "SIGN_UP",
-    "utmTemplate": "utm_source=facebook&utm_medium=paid&utm_campaign={{appId}}"
+    "utmTemplate": {
+      "source": "facebook",
+      "medium": "paid_social",
+      "campaign": "{{appId}}-validation"
+    }
   },
   "tracking": {
     "_comment": "Webhook URLs are null until n8n or your backend provisions them",
@@ -217,7 +239,9 @@
     "mockupUrl": null,
     "landingPageUrl": null,
     "vercelProjectId": null,
-    "githubRepoUrl": null
+    "vercelDeploymentUrl": null,
+    "githubRepoUrl": null,
+    "lastDeployedAt": null
   },
   "appStore": {
     "_comment": "Optional. Reserved for future App Store metadata workflows.",
@@ -225,6 +249,8 @@
     "keywords": ["keyword-one", "keyword-two"],
     "promotionalText": "Promotional text shown above the description on the App Store.",
     "description": "Full App Store description. Can be longer than identity.description.",
-    "appStoreUrl": null
+    "appStoreUrl": null,
+    "supportUrl": "https://example.com/support",
+    "privacyPolicyUrl": "https://example.com/privacy"
   }
 }
