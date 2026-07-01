@@ -1,5 +1,7 @@
 # Phase 1: App Validation Specification
 
+> **Historical record.** Phase 1 shipped spec **1.1.0** (2026-06-27). The current contract is **1.3.0** — see [CHANGELOG.md](CHANGELOG.md) and [APP_PACKAGE_SPEC.md](APP_PACKAGE_SPEC.md).
+
 **Status:** Complete  
 **Spec version shipped:** 1.1.0  
 **Completed:** 2026-06-27
@@ -65,7 +67,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full 1.1.0 release notes.
 
 - `landingPage.sections`: `id: "screenshots"` with `source: "media"`
 - `mockup.installCommand`, `mockup.devCommand`
-- `deployment.vercelDeploymentUrl`, `deployment.lastDeployedAt`
+- `deployment` nested objects (`deployment.mockup.*`, `deployment.landing.*`) — see [APP_PACKAGE_SPEC.md](APP_PACKAGE_SPEC.md#deployment) for the current 1.3.0 model
 - `appStore.supportUrl`, `appStore.privacyPolicyUrl`
 - `mediaAsset.title`, `mediaAsset.description` (screenshot captions)
 - `ads.platforms[]`

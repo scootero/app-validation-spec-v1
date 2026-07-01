@@ -10,6 +10,8 @@ This example demonstrates the **smallest valid App Package** for early ideation.
 - No optional sections: `branding`, `mockup`, `media`, `ads`, `tracking`, `analytics`, `experiment`, `deployment`, or `appStore`
 - No `screenshots` section — that requires `media.screenshots` and `source: "media"`
 
+The minimal profile intentionally omits `deployment`, `tracking`, `analytics`, and `experiment`. That is valid for early ideation only — expand to the [full-app example](../full-app/) before setting `status: provisioning`.
+
 ## App idea
 
 **Focus Timer** — a one-time-purchase iOS productivity app for timed deep-work sessions.
@@ -27,4 +29,4 @@ In Phase 2, validate against `schemas/app.schema.json` from the repo root:
 # validate-app examples/minimal-app/app.json
 ```
 
-This example uses `specVersion` **1.1.0**. Packages at **1.0.0** remain valid if they omit the new optional fields added in 1.1.0.
+This example uses `specVersion` **1.3.0**. Packages at older versions remain valid if they omit newer optional fields — see [docs/versioning.md](../../docs/versioning.md).

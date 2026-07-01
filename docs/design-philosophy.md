@@ -66,7 +66,8 @@ This avoids forcing a `copy/` folder on every idea while keeping full packages f
 
 ### Documented but not schema-enforced (yet)
 
-- `experiment` required before `status: ready` — enforced in Phase 2 validator, not JSON Schema alone, so drafts stay valid while incomplete
+- `experiment` required before `status: provisioning` — enforced in Phase 2 validator, not JSON Schema alone, so drafts stay valid while incomplete
+- `tracking.webhookUrl` required before `status: ready` — provisioned during `provisioning`
 - At least `hero` + `cta` enabled in `landingPage` — documented in profiles, validated in Phase 2
 
 ## experiment vs analytics
@@ -82,29 +83,34 @@ These sections are deliberately separate:
 
 ## deployment and mockup.previewUrl
 
+**v1 model:** one Vercel project per mockup, one Vercel project per landing page.
+
 Automation writes back URLs and platform IDs after deploy steps:
 
-- `deployment.mockupUrl` and `mockup.previewUrl` should match after mockup deploy
-- `deployment.landingPageUrl` is set after Vercel deploy
-- `deployment.vercelDeploymentUrl` records the latest Vercel deployment URL (may differ from the canonical landing page URL)
-- `deployment.vercelProjectId` and `deployment.githubRepoUrl` link to infrastructure
-- `deployment.lastDeployedAt` is an ISO 8601 timestamp of the most recent deploy
+- `deployment.mockup.url` and `mockup.previewUrl` should match after mockup deploy
+- `deployment.landing.url` is the canonical public landing URL (ad destination)
+- `deployment.landing.deploymentUrl` records the latest Vercel deployment URL
+- `deployment.mockup.vercelProjectId` and `deployment.landing.vercelProjectId` link to infrastructure
+- `deployment.githubRepoUrl` links to source repo if created
+- `deployment.mockup.lastDeployedAt` and `deployment.landing.lastDeployedAt` are ISO 8601 deploy timestamps
 
 Mockup authoring uses `installCommand` and `devCommand` for local setup and preview; `buildCommand` and `deployCommand` run in automation.
 
-All deployment fields are nullable in new packages. n8n owns write-back; humans should not hand-edit these except for recovery.
+All deployment nested fields are nullable in new packages. n8n owns write-back; humans should not hand-edit these except for recovery.
 
 ## status as the pipeline state machine
 
 `status` is a root-level enum so n8n can branch on a single field without inferring state from nullable URLs or webhook history.
 
 ```
-draft → ready → validating → winner → built
-                    ↓           ↓
-                 paused      killed
+draft → provisioning → ready → validating → winner → built
+                              ↓           ↓
+                           paused      killed
 ```
 
-Automation may set `validating`, `winner`, and `killed`. Humans set `draft`, `ready`, `paused`, and `built`.
+- `provisioning`: n8n provisions `tracking.webhookUrl`, then promotes to `ready`
+- Automation may set `provisioning`, `validating`, `winner`, and `killed`
+- Humans set `draft`, `paused`, and `built`
 
 ## appId immutability
 
@@ -147,4 +153,5 @@ Avoid renaming keys or changing enum meanings within the same major version.
 - [workflow.md](workflow.md) — pipeline stages mapped to spec fields
 - [n8n-integration-notes.md](n8n-integration-notes.md) — parsing and write-back conventions
 - [naming-conventions.md](naming-conventions.md) — `appId`, paths, filenames
+- [validator-gate.md](validator-gate.md) — pre-deploy validation checklist
 - [versioning.md](versioning.md) — semver policy and migrations

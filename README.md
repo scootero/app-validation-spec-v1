@@ -46,6 +46,7 @@ app-validation-spec/
 │   ├── app.json
 │   └── copy/
 │       ├── hero.md
+│       ├── benefits.md
 │       ├── features.md
 │       └── faq.md
 ├── examples/
@@ -77,13 +78,13 @@ app-validation-spec/
 | Example | App | Profile |
 |---------|-----|---------|
 | [examples/minimal-app/](examples/minimal-app/) | Focus Timer | Single `app.json`, inline copy, `status: draft` |
-| [examples/full-app/](examples/full-app/) | Habit Stack | All sections, file-based copy, screenshots via `source: "media"`, `status: ready` |
+| [examples/full-app/](examples/full-app/) | Habit Stack | All sections, file-based copy, screenshots via `source: "media"`, `status: provisioning` |
 
 ## Spec version
 
-Current spec version: **1.1.0**
+Current spec version: **1.3.0**
 
-Every `app.json` must include `"specVersion": "1.1.0"` (or `"1.0.0"` for packages created before this release). See [docs/versioning.md](docs/versioning.md).
+Every `app.json` must include `"specVersion": "1.3.0"` (or an older supported version). See [docs/versioning.md](docs/versioning.md).
 
 ## Contributing
 

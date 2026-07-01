@@ -1,10 +1,11 @@
 {
-  "specVersion": "1.1.0",
+  "specVersion": "1.3.0",
   "appId": "habit-stack",
-  "status": "ready",
+  "status": "provisioning",
   "identity": {
     "appName": "Habit Stack",
     "tagline": "Build better habits, one stack at a time",
+    "badgeText": "Coming soon",
     "description": "Habit Stack is a cross-platform wellness app that helps busy adults build lasting routines by chaining small daily habits with streak tracking, smart reminders, and weekly insights.",
     "category": "health-fitness",
     "platform": "cross-platform",
@@ -12,6 +13,7 @@
   },
   "audience": {
     "primary": "Health-conscious adults aged 25–45 who want to build morning and evening routines without complicated productivity systems.",
+    "landingPhrase": "busy adults building better routines",
     "secondary": "People returning to fitness or mindfulness after a break who need a gentle restart.",
     "painPoints": [
       "Starting too many habits at once and burning out within two weeks",
@@ -35,20 +37,23 @@
       "currency": "USD",
       "amount": 6.99,
       "period": "monthly",
-      "trialDays": 7
+      "trialDays": 7,
+      "headlineLabel": "Get for"
     },
     "cta": {
-      "primaryText": "Start Free Trial",
+      "primaryText": "Buy Now",
       "secondaryText": "See how it works",
-      "buyNowText": "Subscribe Now",
-      "waitlistText": "Join the waitlist"
+      "buyNowText": "Buy Now on the App Store",
+      "waitlistText": "Keep Me Updated"
     }
   },
   "branding": {
     "theme": {
       "mode": "light",
+      "landingStyle": "liquid-glass",
       "primaryColor": "#059669",
       "accentColor": "#F59E0B",
+      "accentName": "emerald",
       "fontFamily": "Inter, system-ui, sans-serif"
     },
     "style": {
@@ -65,6 +70,9 @@
     "buildCommand": "npm run build",
     "devCommand": "npm run dev",
     "deployCommand": "npx vercel deploy --prod",
+    "baseWidth": 375,
+    "baseHeight": 820,
+    "clipBottomPx": 0,
     "previewUrl": null,
     "notes": "Prototype should demonstrate stack creation, daily check-in, and streak view."
   },
@@ -125,7 +133,8 @@
         "source": "inline",
         "inline": {
           "headline": "Ready to build your first stack?",
-          "subheadline": "Join thousands forming better routines — one small habit at a time."
+          "subheadline": "Join thousands forming better routines — one small habit at a time.",
+          "placeholder": "Enter your email"
         }
       },
       {
@@ -171,6 +180,7 @@
     }
   },
   "tracking": {
+    "webhookUrl": null,
     "webhooks": {
       "validationComplete": null,
       "deployComplete": null,
@@ -180,13 +190,16 @@
     "events": [
       { "name": "page_view", "description": "Landing page viewed" },
       { "name": "email_captured", "description": "User submitted email on landing page" },
-      { "name": "buy_now_clicked", "description": "User clicked Subscribe Now" },
+      { "name": "buy_now_clicked", "description": "User clicked Buy Now / purchase CTA" },
       { "name": "trial_started", "description": "User completed trial signup flow" }
     ]
   },
   "analytics": {
     "projectId": "proj_habit-stack",
     "experimentId": "exp_habit-stack_2026q2_001",
+    "experimentRunId": "run_habit-stack_2026q2_001",
+    "landingVariantId": "v1",
+    "mockupVersionId": "v1",
     "funnelName": "validation_funnel",
     "customDimensions": {
       "category": "health-fitness",
@@ -200,7 +213,7 @@
     "successCriteria": [
       "Cost per email signup below $5",
       "Trial start rate above 15% of email signups",
-      "Buy Now / Subscribe click rate above 2.5%",
+      "Buy Now click rate above 2.5%",
       "At least 200 unique landing page visitors"
     ],
     "testBudget": {
@@ -216,12 +229,18 @@
     }
   },
   "deployment": {
-    "mockupUrl": null,
-    "landingPageUrl": null,
-    "vercelProjectId": null,
-    "vercelDeploymentUrl": null,
-    "githubRepoUrl": null,
-    "lastDeployedAt": null
+    "mockup": {
+      "vercelProjectId": null,
+      "url": null,
+      "lastDeployedAt": null
+    },
+    "landing": {
+      "vercelProjectId": null,
+      "url": null,
+      "deploymentUrl": null,
+      "lastDeployedAt": null
+    },
+    "githubRepoUrl": null
   },
   "appStore": {
     "subtitle": "Stack small habits daily",

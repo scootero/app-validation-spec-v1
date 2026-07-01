@@ -32,7 +32,7 @@
     "status": {
       "type": "string",
       "description": "Lifecycle state of the app package in the validation pipeline.",
-      "enum": ["draft", "ready", "validating", "paused", "winner", "killed", "built"]
+      "enum": ["draft", "provisioning", "ready", "validating", "paused", "winner", "killed", "built"]
     },
     "identity": { "$ref": "#/$defs/identity" },
     "audience": { "$ref": "#/$defs/audience" },
@@ -64,6 +64,11 @@
           "type": "string",
           "maxLength": 120,
           "description": "Short hook shown in hero sections and ads."
+        },
+        "badgeText": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "Optional hero badge label, e.g. Coming soon to the App Store. Landing generators may fall back to platform-based defaults when omitted."
         },
         "description": {
           "type": "string",
@@ -124,6 +129,12 @@
           "minLength": 5,
           "maxLength": 300,
           "description": "Primary target audience description."
+        },
+        "landingPhrase": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 120,
+          "description": "Short audience phrase for landing pages, e.g. Built for {landingPhrase}. Falls back to primary when omitted."
         },
         "secondary": {
           "type": "string",
@@ -191,6 +202,11 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 365
+        },
+        "headlineLabel": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Pricing section label before the price amount, e.g. Get for."
         }
       },
       "allOf": [
@@ -236,6 +252,11 @@
           "type": "string",
           "maxLength": 40,
           "description": "Label for waitlist or early-access signup."
+        },
+        "emailPlaceholder": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Placeholder text for email capture input. Prefer landingPage.sections[cta].inline.placeholder when using inline CTA copy."
         }
       }
     },
@@ -257,6 +278,19 @@
           "type": "string",
           "enum": ["light", "dark", "auto"]
         },
+        "landingStyle": {
+          "type": "string",
+          "enum": [
+            "liquid-glass",
+            "apple-light",
+            "apple-dark",
+            "midnight",
+            "aurora",
+            "black-titanium",
+            "minimal-white"
+          ],
+          "description": "Landing page theme preset. Falls back from mode when omitted."
+        },
         "primaryColor": {
           "type": "string",
           "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$"
@@ -264,6 +298,11 @@
         "accentColor": {
           "type": "string",
           "pattern": "^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$"
+        },
+        "accentName": {
+          "type": "string",
+          "enum": ["violet", "blue", "emerald", "rose", "amber", "cyan"],
+          "description": "Landing template accent palette name. Preferred over accentColor hex mapping when set."
         },
         "fontFamily": {
           "type": "string",
@@ -334,6 +373,28 @@
           "format": "uri",
           "description": "Live preview URL after mockup deploy. Null until deployed."
         },
+        "baseWidth": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 1200,
+          "description": "Mockup iframe base width in pixels for landing embed."
+        },
+        "baseHeight": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 2000,
+          "description": "Mockup iframe base height in pixels for landing embed."
+        },
+        "clipBottomPx": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Pixels clipped from mockup iframe bottom to hide dev chrome."
+        },
+        "useOuterDeviceFrame": {
+          "type": "boolean",
+          "description": "Whether the landing embed shows an outer device frame."
+        },
         "notes": {
           "type": "string",
           "maxLength": 500
@@ -400,7 +461,12 @@
           "properties": {
             "headline": { "type": "string", "maxLength": 120 },
             "subheadline": { "type": "string", "maxLength": 300 },
-            "body": { "type": "string", "maxLength": 2000 }
+            "body": { "type": "string", "maxLength": 2000 },
+            "placeholder": {
+              "type": "string",
+              "maxLength": 60,
+              "description": "Email input placeholder when section id is cta."
+            }
           }
         },
         "file": {
@@ -549,6 +615,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "webhookUrl": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "description": "Canonical unified landing-event webhook. Required before status becomes ready."
+        },
         "webhooks": {
           "type": "object",
           "additionalProperties": false,
@@ -580,6 +651,21 @@
       "properties": {
         "projectId": { "type": "string", "maxLength": 100 },
         "experimentId": { "type": "string", "maxLength": 100 },
+        "experimentRunId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Immutable run identifier for one validation cycle."
+        },
+        "landingVariantId": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Landing page copy/layout variant identifier."
+        },
+        "mockupVersionId": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "Mockup build variant identifier."
+        },
         "funnelName": { "type": "string", "maxLength": 100 },
         "customDimensions": {
           "type": "object",
@@ -663,20 +749,42 @@
       "additionalProperties": false,
       "description": "Generated and deployed URLs and platform IDs. Populated by automation; null until deploy steps complete.",
       "properties": {
-        "mockupUrl": { "type": ["string", "null"], "format": "uri" },
-        "landingPageUrl": { "type": ["string", "null"], "format": "uri" },
-        "vercelProjectId": { "type": ["string", "null"], "maxLength": 100 },
-        "vercelDeploymentUrl": {
-          "type": ["string", "null"],
-          "format": "uri",
-          "description": "Latest Vercel deployment URL for the landing page."
+        "mockup": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vercelProjectId": { "type": ["string", "null"], "maxLength": 100 },
+            "url": { "type": ["string", "null"], "format": "uri" },
+            "lastDeployedAt": {
+              "type": ["string", "null"],
+              "format": "date-time",
+              "description": "ISO 8601 timestamp of the most recent mockup deploy."
+            }
+          }
         },
-        "githubRepoUrl": { "type": ["string", "null"], "format": "uri" },
-        "lastDeployedAt": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "ISO 8601 timestamp of the most recent deploy. Null until first deploy."
-        }
+        "landing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vercelProjectId": { "type": ["string", "null"], "maxLength": 100 },
+            "url": {
+              "type": ["string", "null"],
+              "format": "uri",
+              "description": "Canonical public landing page URL (ad destination)."
+            },
+            "deploymentUrl": {
+              "type": ["string", "null"],
+              "format": "uri",
+              "description": "Latest Vercel deployment URL for the landing page."
+            },
+            "lastDeployedAt": {
+              "type": ["string", "null"],
+              "format": "date-time",
+              "description": "ISO 8601 timestamp of the most recent landing deploy."
+            }
+          }
+        },
+        "githubRepoUrl": { "type": ["string", "null"], "format": "uri" }
       }
     },
     "appStore": {

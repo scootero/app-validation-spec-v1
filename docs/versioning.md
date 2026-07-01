@@ -20,7 +20,7 @@ They move together on releases but serve different consumers:
 - Pattern in schema: `^\d+\.\d+\.\d+$`
 - No pre-release or build metadata in `app.json`
 
-Current spec version: **1.1.0**
+Current spec version: **1.3.0**
 
 ## Semver rules for this spec
 
@@ -62,11 +62,11 @@ Every `app.json` includes:
 
 ```json
 {
-  "specVersion": "1.1.0"
+  "specVersion": "1.3.0"
 }
 ```
 
-New packages should use the current spec version. Packages at `1.0.0` remain valid against the current schema if they omit 1.1.0 optional fields.
+New packages should use the current spec version. Packages at `1.0.0`, `1.1.0`, or `1.2.0` remain valid against the current schema if they omit newer optional fields.
 
 Validators (Phase 2) will:
 
@@ -83,6 +83,57 @@ When a new spec version ships:
 3. Add new fields if the minor version introduced them
 4. Rename or restructure fields if the major version changed them
 5. Re-validate against the new schema
+
+### Migrating 1.2.0 → 1.3.0
+
+Spec 1.3.0 adds `provisioning` status, canonical `tracking.webhookUrl`, nested deployment objects, and analytics run/variant IDs. Flat deployment fields are removed from the schema.
+
+**Required updates when bumping to 1.3.0:**
+
+| Area | Change |
+|------|--------|
+| Status | Add `provisioning` between `draft` and `ready`; set `provisioning` when package is complete; `ready` requires `tracking.webhookUrl` |
+| Tracking | Add `tracking.webhookUrl` (canonical); legacy `tracking.webhooks.emailCaptured` / `buyNowClicked` optional |
+| Deployment | Replace flat `deployment.mockupUrl`, `deployment.landingPageUrl`, `deployment.vercelProjectId`, `deployment.vercelDeploymentUrl`, `deployment.lastDeployedAt` with nested `deployment.mockup.*` and `deployment.landing.*` |
+| Analytics | Add `experimentRunId`, `landingVariantId`, `mockupVersionId` before `provisioning` |
+| Events | Use `eventType` (`page_view`, `buy_now_clicked`, `email_captured`, `mockup_interacted`) in webhook payloads |
+
+Example deployment structure:
+
+```json
+{
+  "deployment": {
+    "mockup": {
+      "vercelProjectId": null,
+      "url": null,
+      "lastDeployedAt": null
+    },
+    "landing": {
+      "vercelProjectId": null,
+      "url": null,
+      "deploymentUrl": null,
+      "lastDeployedAt": null
+    },
+    "githubRepoUrl": null
+  }
+}
+```
+
+### Migrating 1.1.0 → 1.2.0
+
+Spec 1.2.0 added optional landing fields and `copy/benefits.md`. No breaking changes.
+
+**Recommended updates when bumping to 1.2.0:**
+
+| Area | Change |
+|------|--------|
+| Copy | Add `copy/benefits.md` for hero bullets and benefit grid |
+| Identity | Add `badgeText` for hero badge |
+| Audience | Add `landingPhrase` for short *Built for …* line |
+| Branding | Add `landingStyle` and `accentName` for landing theme |
+| Mockup | Add `baseWidth`, `baseHeight`, `clipBottomPx` for embed sizing |
+| Commerce | Add `pricing.headlineLabel`; CTA `waitlistText` and email `placeholder` |
+| Landing | Add `sections[cta].inline.placeholder` for email input |
 
 ### Migrating 1.0.0 → 1.1.0
 
@@ -148,10 +199,12 @@ Planned behavior:
 ```txt
 specVersion 1.0.x → schemas/app.schema.json (backward compatible)
 specVersion 1.1.x → schemas/app.schema.json
+specVersion 1.2.x → schemas/app.schema.json
+specVersion 1.3.x → schemas/app.schema.json
 specVersion 2.x.x → schemas/app.schema.v2.json (when breaking changes ship)
 ```
 
-For 1.0.x and 1.1.x, a single schema file is sufficient. Split schemas when a major version requires supporting multiple versions simultaneously.
+For 1.0.x through 1.3.x, a single schema file is sufficient. Split schemas when a major version requires supporting multiple versions simultaneously.
 
 ## n8n and tooling
 
@@ -174,9 +227,9 @@ The string form of `ads.utmTemplate` is deprecated in favor of the structured ob
 
 | Item | Version |
 |------|---------|
-| Spec | 1.1.0 |
+| Spec | 1.3.0 |
 | Schema | [schemas/app.schema.json](../schemas/app.schema.json) |
-| Released | 2026-06-27 |
+| Released | 2026-06-30 |
 
 ## Related documents
 

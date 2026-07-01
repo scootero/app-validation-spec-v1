@@ -13,6 +13,10 @@ App Validation/
 └── {appId}/
     ├── app.json
     ├── copy/
+    │   ├── hero.md
+    │   ├── benefits.md
+    │   ├── features.md
+    │   └── faq.md
     ├── media/
     └── mockup/
 ```
@@ -31,7 +35,7 @@ App Validation/
 
 Drive does not push file-change events to n8n natively. Common patterns:
 
-- **Schedule trigger** — poll parent folder every N minutes for `status: ready`
+- **Schedule trigger** — poll parent folder every N minutes for `status: provisioning` or `status: ready`
 - **Manual trigger** — operator kicks off a specific `appId`
 - **Drive webhook** (if available in your stack) — filter on parent folder path
 
@@ -54,8 +58,15 @@ return [{ json: app }];
 | `$json.status` | Pipeline branching |
 | `$json.specVersion` | Schema version selection |
 | `$json.identity.appName` | Display name in notifications |
+| `$json.identity.badgeText` | Hero badge on landing page |
+| `$json.audience.landingPhrase` | Short target-audience line |
 | `$json.commerce.pricing` | Landing page pricing block |
+| `$json.commerce.pricing.headlineLabel` | Pricing label before amount |
 | `$json.commerce.cta.buyNowText` | CTA button label |
+| `$json.commerce.cta.waitlistText` | Email capture button label |
+| `$json.branding.theme.landingStyle` | Landing theme preset |
+| `$json.branding.theme.accentName` | Landing accent palette |
+| `$json.mockup.baseWidth` / `baseHeight` / `clipBottomPx` | Mockup embed dimensions |
 | `$json.landingPage.sections` | Section order and copy sources |
 | `$json.experiment.testBudget.amount` | Ad spend cap |
 | `$json.ads.platforms` | Target ad platforms (e.g. facebook, instagram) |
@@ -67,12 +78,14 @@ return [{ json: app }];
 For each section where `source === "file"` and `enabled === true`:
 
 1. Read `$json.landingPage.sections[i].file` relative to package root
-2. Load markdown from Drive, e.g. `copy/hero.md`
+2. Load markdown from Drive, e.g. `copy/hero.md`, `copy/features.md`, `copy/faq.md`
 3. Pass content to landing page generator node
+
+Always read `copy/benefits.md` when present — benefits are not declared in `app.json` and are consumed by landing generators independently of section `file` references.
 
 For each section where `source === "media"` and `enabled === true`:
 
-1. Confirm `id === "screenshots"` (only supported media section in 1.1.0)
+1. Confirm `id === "screenshots"` (only supported media section in 1.1.0+)
 2. Read `$json.media.screenshots` array — no separate file path on the section
 3. Download each screenshot binary from Drive using `path`
 4. Pass `path`, `alt`, `title`, and `description` to the landing page generator
@@ -85,7 +98,17 @@ For each asset in `media`:
 const iconPath = $json.media?.icon?.path; // e.g. "media/icon.png"
 ```
 
-Download binary from Drive before upload to ad platforms or static site build.
+Download binary from Drive before upload to ad platforms or static site build. Copy `media/og-image.png` to the landing build when generating Open Graph metadata.
+
+## Landing page transform (n8n or local script)
+
+When generating landing config from an App Package:
+
+1. **Translate only** — read all app-specific content from `app.json` and `copy/`; do not hardcode app-specific benefits, audience phrases, or branding in the generator.
+2. Map `copy/benefits.md` → benefit list; `audience.landingPhrase` → target audience line; `identity.badgeText` → hero badge; `landingPage.seo` → metadata; footer inline body → footer text.
+3. Use generic fallbacks only when fields are omitted (empty strings, platform-based badge for iOS, `clipBottomPx: 0`).
+
+Reference implementation: `landing-template/scripts/generate-app-config.js` and `APP_PACKAGE_TRANSFORM.md`.
 
 ## Write-back conventions
 
@@ -99,28 +122,40 @@ Automation **writes back** to `app.json` on Drive after deploy and decision step
     "previewUrl": "https://mockup-focus-timer.vercel.app"
   },
   "deployment": {
-    "mockupUrl": "https://mockup-focus-timer.vercel.app"
+    "mockup": {
+      "vercelProjectId": "prj_mockup_abc123",
+      "url": "https://mockup-focus-timer.vercel.app",
+      "lastDeployedAt": "2026-06-27T14:30:00Z"
+    }
   }
 }
 ```
 
-`mockup.previewUrl` and `deployment.mockupUrl` should always match.
+`mockup.previewUrl` and `deployment.mockup.url` should always match.
 
 ### After landing page deploy
 
 ```json
 {
   "deployment": {
-    "landingPageUrl": "https://focus-timer.vercel.app",
-    "vercelProjectId": "prj_abc123",
-    "vercelDeploymentUrl": "https://focus-timer-abc123.vercel.app",
-    "githubRepoUrl": "https://github.com/org/focus-timer-landing",
-    "lastDeployedAt": "2026-06-27T14:30:00Z"
+    "landing": {
+      "vercelProjectId": "prj_landing_abc123",
+      "url": "https://focus-timer.vercel.app",
+      "deploymentUrl": "https://focus-timer-abc123.vercel.app",
+      "lastDeployedAt": "2026-06-27T14:30:00Z"
+    },
+    "githubRepoUrl": "https://github.com/org/focus-timer-landing"
   }
 }
 ```
 
-`landingPageUrl` is the canonical public URL. `vercelDeploymentUrl` is the latest deployment URL from Vercel and may differ during preview deploys.
+`deployment.landing.url` is the canonical public URL (ad destination). `deployment.landing.deploymentUrl` is the latest deployment URL from Vercel and may differ during preview deploys.
+
+## v1 deployment model
+
+- **One Vercel project per mockup** — `deployment.mockup.vercelProjectId`
+- **One Vercel project per landing page** — `deployment.landing.vercelProjectId`
+- n8n writes URLs and IDs back into `app.json` after each deploy step
 
 ### After experiment decision
 
@@ -150,11 +185,11 @@ Only automation or an approved decision node should set terminal statuses.
 
 ## Webhook placeholders
 
-`tracking.webhooks` values are `null` until provisioned. n8n can:
+`tracking.webhookUrl` is the **canonical** unified landing-event webhook. `tracking.webhooks` values are `null` until provisioned. n8n can:
 
-1. Create webhook URLs (n8n Webhook nodes)
-2. Write URLs into `app.json` before `status: ready`
-3. Fire webhooks at stage completion
+1. Create webhook URLs (n8n Webhook nodes) during `provisioning`
+2. Write `tracking.webhookUrl` into `app.json` before `status: ready`
+3. Fire pipeline webhooks at stage completion
 
 | Webhook key | When to fire |
 |-------------|--------------|
@@ -163,18 +198,44 @@ Only automation or an approved decision node should set terminal statuses.
 | `emailCaptured` | Landing page form submission |
 | `buyNowClicked` | User clicks purchase CTA |
 
-### Webhook payload (recommended shape)
+### Webhook payload (landing template shape)
+
+The deployed landing page POSTs JSON with `eventType` (not `event`). Stable values:
+
+| `eventType` | When |
+|-------------|------|
+| `page_view` | Once on page load |
+| `buy_now_clicked` | Pricing fake-door form submit (email + purchase intent) |
+| `email_captured` | Waitlist / Keep Me Updated form submit |
+| `mockup_interacted` | First expand or click on live mockup preview |
+
+Minimal example (see [landing-template README](../../landing-template/README.md) for the full field list):
 
 ```json
 {
+  "eventType": "email_captured",
   "appId": "habit-stack",
-  "event": "email_captured",
-  "timestamp": "2026-06-26T12:00:00Z",
-  "analytics": {
-    "experimentId": "exp_habit-stack_2026q2_001"
-  },
-  "metadata": {}
+  "appName": "Habit Stack",
+  "experimentId": "exp_habit-stack_2026q2_001",
+  "experimentRunId": "run_habit-stack_2026q2_001",
+  "projectId": "proj_habit-stack",
+  "landingVariantId": "v1",
+  "mockupVersionId": "v1",
+  "visitorId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+  "email": "user@example.com",
+  "timestamp": "2026-06-26T12:00:00.000Z"
 }
+```
+
+When `tracking.webhookUrl` is set, all event types use one URL; otherwise route by legacy `buyNowClicked` / `emailCaptured` webhook keys.
+
+### Google Sheet event columns (canonical order)
+
+Append one row per webhook payload. Recommended column order:
+
+```
+timestamp | eventType | appId | appName | experimentId | experimentRunId | projectId | deploymentId | landingVersion | landingVariantId | mockupVersionId | campaignName | visitorId | sessionId | email | price | pageUrl | referrer | utmSource | utmMedium | utmCampaign | utmContent | utmTerm | timeOnPageSeconds | mockupInteracted
 ```
 
 ## Status branching
@@ -244,7 +305,7 @@ if (typeof tpl === 'object' && tpl !== null) {
   });
 }
 
-const destination = `${$json.deployment.landingPageUrl}?${params.toString()}`;
+const destination = `${$json.deployment.landing.url}?${params.toString()}`;
 ```
 
 ### Legacy string only
@@ -254,7 +315,7 @@ const template = $json.ads.utmTemplate;
 const utm = template
   .replace('{{appId}}', $json.appId)
   .replace('{{headline_variant}}', 'a');
-const destination = `${$json.deployment.landingPageUrl}?${utm}`;
+const destination = `${$json.deployment.landing.url}?${utm}`;
 ```
 
 Use the structured form in new packages. The string form remains valid for 1.0.x packages.
@@ -276,11 +337,11 @@ Read `specVersion` before validation:
 ```javascript
 const version = $json.specVersion;
 // Phase 2: select schema file for version
-// 1.0.x and 1.1.x → schemas/app.schema.json (single schema, backward compatible)
+// 1.0.x – 1.2.x → schemas/app.schema.json (single schema, backward compatible)
 // 2.x.x → future split schema when breaking changes ship
 ```
 
-Packages at `1.0.0` remain valid against the current schema if they omit 1.1.0 optional fields. Workflows should not reject `1.0.0` packages solely for using an older `specVersion` unless a validator confirms incompatibility.
+Packages at `1.0.0` and `1.1.0` remain valid against the current schema if they omit 1.2.0 optional fields. Workflows should not reject older `specVersion` values solely for using an older minor version unless a validator confirms incompatibility.
 
 If `specVersion` is unsupported (e.g. `2.0.0` before a schema exists), block the pipeline and notify — do not silently validate against the wrong schema.
 

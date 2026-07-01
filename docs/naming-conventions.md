@@ -73,11 +73,12 @@ Display name shown to users. Rules:
 
 | File | Purpose |
 |------|---------|
-| `copy/hero.md` | Hero section |
+| `copy/hero.md` | Hero headline, subheadline, body |
+| `copy/benefits.md` | Short value props for hero bullets and benefit grid |
 | `copy/features.md` | Features section |
 | `copy/faq.md` | FAQ section |
 
-Use lowercase filenames. Additional copy files are allowed if referenced from `landingPage.sections[].file`.
+Use lowercase filenames. `copy/benefits.md` is read by landing generators when present and is not referenced from `landingPage.sections[].file`. Additional copy files are allowed if referenced from `landingPage.sections[].file`.
 
 ### Media files
 
@@ -121,6 +122,9 @@ Conventions (not schema-enforced):
 |-------|---------|---------|
 | `analytics.projectId` | `proj_{appId}` | `proj_habit-stack` |
 | `analytics.experimentId` | `exp_{appId}_{period}_{seq}` | `exp_habit-stack_2026q2_001` |
+| `analytics.experimentRunId` | `run_{appId}_{period}_{seq}` | `run_habit-stack_2026q2_001` |
+| `analytics.landingVariantId` | short slug | `v1`, `v2`, `hero-b` |
+| `analytics.mockupVersionId` | short slug | `v1`, `v2` |
 | `analytics.funnelName` | snake_case | `validation_funnel` |
 
 ## Tracking event names
@@ -175,7 +179,7 @@ Human-readable — any casing allowed:
 ## specVersion
 
 - Strict semver: `MAJOR.MINOR.PATCH`
-- Current: `1.1.0`
+- Current: `1.3.0`
 - Do not use pre-release tags in `app.json` (`1.0.0-beta` is invalid)
 
 ## Template _comment keys

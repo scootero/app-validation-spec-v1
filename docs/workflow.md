@@ -7,6 +7,7 @@ This document maps the end-to-end app validation pipeline to App Package fields.
 ```mermaid
 flowchart TD
   drive[GoogleDrive_AppPackage]
+  provision[Provision_Webhooks]
   validate[Validate_app.json]
   mockupDeploy[Deploy_Mockup]
   landingGen[Generate_LandingPage]
@@ -16,7 +17,8 @@ flowchart TD
   dashboard[Analytics_Dashboard]
   decide[Evaluate_Experiment]
 
-  drive --> validate
+  drive --> provision
+  provision --> validate
   validate --> mockupDeploy
   validate --> landingGen
   mockupDeploy --> landingGen
@@ -29,6 +31,24 @@ flowchart TD
   decide -->|killed| killed[status_killed]
 ```
 
+## Stage 0: Provisioning (status: provisioning)
+
+**Trigger:** Author sets `status` to `provisioning` after completing the package (full `experiment`, ads, analytics IDs).
+
+**Goal:** Provision infrastructure before the main pipeline runs.
+
+**Actions:**
+- Create n8n webhook endpoint(s)
+- Write `tracking.webhookUrl` to `app.json`
+- Set `status` to `ready`
+
+**Gate:** `tracking.webhookUrl` must be non-null before `status` becomes `ready`.
+
+| Spec fields | Role |
+|-------------|------|
+| `status` | Must be `provisioning` |
+| `tracking.webhookUrl` | Output of this stage |
+
 ## Stage 1: Read from Google Drive
 
 **Trigger:** New or updated folder under a configured Drive parent directory.
@@ -38,6 +58,7 @@ flowchart TD
 **Read:**
 - `app.json` (required)
 - Files referenced by `landingPage.sections[].file`
+- `copy/benefits.md` (when present — benefit bullets for landing)
 - Files referenced by `media.*.path`
 - Mockup source at `mockup.sourcePath` (if present)
 
@@ -53,14 +74,12 @@ flowchart TD
 
 **Goal:** Confirm the package conforms to the spec before any deploy or ad spend.
 
-**Checks (Phase 2 validator):**
+**Checks (Phase 2 validator):** See [validator-gate.md](validator-gate.md) for the full checklist. Summary:
 - JSON Schema validation against `schemas/app.schema.json`
 - Referenced files exist on Drive
-- `experiment` fully populated when `status` is `ready` or `validating`
-- At least `hero` and `cta` sections enabled in `landingPage`
-- Sections with `source: "media"` require `media.screenshots` with at least one entry
-- Media paths resolvable (if `media` section present)
-- `mockup.entryPoint` resolvable (if `mockup` section present)
+- `experiment` fully populated when `status` is `provisioning`, `ready`, or `validating`
+- Analytics IDs present before `provisioning`
+- `tracking.webhookUrl` non-null when `status` is `ready` or later
 
 **On success:**
 - Fire `tracking.webhooks.validationComplete` (if set)
@@ -88,27 +107,37 @@ flowchart TD
 
 **Write back:**
 - `mockup.previewUrl`
-- `deployment.mockupUrl`
+- `deployment.mockup.url`
+- `deployment.mockup.vercelProjectId`
+- `deployment.mockup.lastDeployedAt`
 
 | Spec fields | Role |
 |-------------|------|
 | `mockup.*` | Build and deploy instructions |
-| `deployment.mockupUrl` | Automation output |
+| `deployment.mockup.*` | Automation output |
 | `branding` | Theme tokens for mockup styling (consumer-dependent) |
 
 ## Stage 4: Generate landing page
 
 **Goal:** Produce a premium landing page from package content.
 
+**Principle:** The App Package is the single source of truth. Landing generators translate `app.json` and `copy/` into site config — they must not embed app-specific defaults.
+
 **Inputs:**
 - `landingPage.sections` — order, enabled flags, inline vs file vs media copy
-- `copy/*.md` — long-form markdown sections
+- `copy/hero.md` — headline, subheadline, body
+- `copy/benefits.md` — short value props for hero and benefit grid
+- `copy/features.md`, `copy/faq.md` — section content
 - `media.screenshots` — rendered when a section has `id: "screenshots"` and `source: "media"`
-- `commerce` — pricing display, CTA labels
-- `branding` — colors, tone
-- `media` — icons, screenshots, og image
-- `identity` — app name, tagline, description
-- `deployment.mockupUrl` or `mockup.previewUrl` — link to live mockup
+- `commerce` — pricing display, CTA labels, `headlineLabel`, `waitlistText`, email placeholder
+- `branding` — `landingStyle`, `accentName`, colors, mode
+- `identity` — app name, tagline, description, `badgeText`
+- `audience` — `landingPhrase`, `painPoints`, `primary`
+- `landingPage.seo` — page title, description, keywords
+- `landingPage.sections[footer]` — footer legal line
+- `mockup.baseWidth`, `baseHeight`, `clipBottomPx` — embed dimensions
+- `deployment.mockup.url` or `mockup.previewUrl` — link to live mockup
+- `media.ogImage` — Open Graph image when file exists
 
 **Output:** Static site or framework project ready for Vercel deploy.
 
@@ -116,25 +145,28 @@ flowchart TD
 |-------------|------|
 | `landingPage` | Structure and copy sources |
 | `landingPage.seo` | Meta title, description, keywords |
-| `commerce.cta` | Button labels |
+| `identity.badgeText` | Hero badge |
+| `audience.landingPhrase` | Short target-audience line |
+| `copy/benefits.md` | Benefit bullets (not in `app.json`) |
+| `commerce.cta` | Button labels and email capture |
 
 ## Stage 5: Deploy landing page to Vercel
 
 **Goal:** Publish the landing page and record live URLs.
 
 **Write back:**
-- `deployment.landingPageUrl`
-- `deployment.vercelProjectId`
-- `deployment.vercelDeploymentUrl`
+- `deployment.landing.url`
+- `deployment.landing.vercelProjectId`
+- `deployment.landing.deploymentUrl`
+- `deployment.landing.lastDeployedAt`
 - `deployment.githubRepoUrl` (if a repo is created)
-- `deployment.lastDeployedAt` (ISO 8601 timestamp)
 
 **On success:** Fire `tracking.webhooks.deployComplete` (if set).
 
 | Spec fields | Role |
 |-------------|------|
 | `landingPage.slug` | URL path on Vercel |
-| `deployment.*` | Automation output |
+| `deployment.landing.*` | Automation output |
 
 ## Stage 6: Create Facebook ads
 
@@ -146,7 +178,7 @@ flowchart TD
 - `callToAction`, `utmTemplate` (structured object or legacy string)
 
 **Also use:**
-- `deployment.landingPageUrl` as destination
+- `deployment.landing.url` as destination
 - `media.ogImage`, `media.screenshots` for creatives
 - `identity.tagline`, `identity.appName` for fallbacks
 

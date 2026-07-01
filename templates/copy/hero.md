@@ -23,6 +23,6 @@ A supporting line that expands on the headline. Explain the core benefit in one 
 
 ## Body
 
-Optional longer paragraph for the hero section. Describe what the app does and why it matters to your target audience.
+Optional longer paragraph for the hero section. Describe what the app does and why it matters to your target audience. Landing generators map this to `heroBody`.
 
 **Primary CTA:** Use labels from `commerce.cta` in `app.json` — do not hardcode button text here.

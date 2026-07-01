@@ -1,6 +1,6 @@
 # App Package Specification
 
-**Version:** 1.1.0  
+**Version:** 1.3.0  
 **Status:** Normative  
 **Schema:** [schemas/app.schema.json](schemas/app.schema.json)
 
@@ -26,6 +26,10 @@ An App Package on Google Drive (or any storage) uses the `appId` as the folder n
 {appId}/
 ├── app.json              # Required manifest
 ├── copy/                 # Optional markdown landing copy
+│   ├── hero.md           # Headline, subheadline, body
+│   ├── benefits.md       # Short value props for hero / benefit grid
+│   ├── features.md       # Feature list
+│   └── faq.md            # FAQ items
 ├── media/                # Optional images and video
 ├── mockup/               # Optional interactive mockup source
 └── README.md             # Optional human notes (not validated)
@@ -41,7 +45,7 @@ Paths in `app.json` are relative to the package root unless noted otherwise.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `specVersion` | Yes | Semver of this specification (currently `1.0.0` or `1.1.0`) |
+| `specVersion` | Yes | Semver of this specification (currently `1.3.0`; see [CHANGELOG.md](CHANGELOG.md)) |
 | `appId` | Yes | Stable kebab-case identifier; matches folder name |
 | `status` | Yes | Lifecycle state (see [Status lifecycle](#status-lifecycle)) |
 
@@ -63,7 +67,7 @@ Paths in `app.json` are relative to the package root unless noted otherwise.
 | `deployment` | No | Generated URLs and platform IDs |
 | `appStore` | No | Reserved App Store metadata |
 
-\* `experiment` is optional in the JSON Schema but **must be fully populated before setting `status` to `ready` or `validating`**. The Phase 2 validator will enforce this.
+\* `experiment` is optional in the JSON Schema but **must be fully populated before setting `status` to `provisioning`**. The Phase 2 validator will enforce this.
 
 ---
 
@@ -74,7 +78,8 @@ The `status` field drives pipeline branching in n8n and records where an app ide
 | Value | Meaning | Typical next step |
 |-------|---------|-------------------|
 | `draft` | Work in progress; not ready for automation | Author completes `app.json` and `experiment` |
-| `ready` | Package complete; awaiting validation kickoff | n8n picks up and validates |
+| `provisioning` | Package complete; awaiting webhook provisioning | n8n provisions `tracking.webhookUrl` |
+| `ready` | Webhook provisioned; awaiting validation kickoff | n8n picks up and validates |
 | `validating` | Active experiment (ads running, traffic flowing) | Monitor analytics |
 | `paused` | Experiment temporarily stopped | Manual review or budget hold |
 | `winner` | Met success criteria; proceed to build | Set `status` to `built` after shipping |
@@ -84,7 +89,8 @@ The `status` field drives pipeline branching in n8n and records where an app ide
 **Rules:**
 
 - New packages start as `draft`.
-- Only humans (or an approval step) should set `ready`.
+- Humans set `provisioning` when the package is complete (experiment, ads, analytics IDs).
+- n8n provisions `tracking.webhookUrl` during `provisioning`, then sets `ready`.
 - Automation sets `validating`, writes `deployment` URLs, and may set `winner` or `killed` per `experiment.decisionRules`.
 - `appId` must never change after the first deploy.
 
@@ -98,6 +104,7 @@ Describes what the app is.
 |-------|----------|------|-------|
 | `appName` | Yes | string | Display name (1–80 chars) |
 | `tagline` | No | string | Short hook for hero and ads (≤120 chars) |
+| `badgeText` | No | string | Hero badge label (≤80 chars), e.g. *Coming soon to the App Store* |
 | `description` | Yes | string | One-paragraph summary (10–500 chars) |
 | `category` | Yes | enum | See [Categories](#categories) |
 | `categoryLabel` | If `category` is `other` | string | Free-text category name |
@@ -117,6 +124,7 @@ Describes who the app is for.
 | Field | Required | Type | Notes |
 |-------|----------|------|-------|
 | `primary` | Yes | string | Primary audience description |
+| `landingPhrase` | No | string | Short phrase for landing *Built for …* line (≤120 chars) |
 | `secondary` | No | string | Secondary audience |
 | `painPoints` | No | string[] | Problems the app solves |
 | `personas` | No | object[] | `{ name, summary }` per persona |
@@ -136,6 +144,7 @@ Pricing and call-to-action labels used on landing pages and ads.
 | `amount` | If paid/freemium/subscription | number | Price amount; `0` for free tier |
 | `period` | If subscription | enum | `one-time`, `monthly`, `yearly` |
 | `trialDays` | No | integer | Free trial length |
+| `headlineLabel` | No | string | Pricing label before amount, e.g. *Get for* |
 
 ### cta
 
@@ -144,7 +153,8 @@ Pricing and call-to-action labels used on landing pages and ads.
 | `primaryText` | Yes | string | Main button label |
 | `secondaryText` | No | string | Secondary action (e.g. Learn More) |
 | `buyNowText` | Yes | string | Purchase-intent button label |
-| `waitlistText` | No | string | Waitlist or early-access label |
+| `waitlistText` | No | string | Waitlist or early-access button label |
+| `emailPlaceholder` | No | string | Email input placeholder (prefer `landingPage.sections[cta].inline.placeholder`) |
 
 ---
 
@@ -157,8 +167,10 @@ Visual theme and writing tone for landing pages and mockups.
 | Field | Required | Type | Notes |
 |-------|----------|------|-------|
 | `mode` | Yes | enum | `light`, `dark`, `auto` |
+| `landingStyle` | No | enum | Landing theme preset: `liquid-glass`, `apple-light`, `apple-dark`, `midnight`, `aurora`, `black-titanium`, `minimal-white` |
 | `primaryColor` | Yes | string | Hex color (e.g. `#2563EB`) |
 | `accentColor` | No | string | Hex color |
+| `accentName` | No | enum | Landing accent palette: `violet`, `blue`, `emerald`, `rose`, `amber`, `cyan` |
 | `fontFamily` | No | string | CSS font stack |
 
 ### style
@@ -185,9 +197,13 @@ Supports both **source project info** (for building and deploying the interactiv
 | `devCommand` | No | string | Shell command to run mockup locally |
 | `deployCommand` | No | string | Shell command to deploy the mockup |
 | `previewUrl` | No | string \| null | Live preview URL; `null` until deployed |
+| `baseWidth` | No | integer | Mockup iframe width in px (default 375 in landing generators) |
+| `baseHeight` | No | integer | Mockup iframe height in px (default 820) |
+| `clipBottomPx` | No | integer | Pixels clipped from iframe bottom (default 0) |
+| `useOuterDeviceFrame` | No | boolean | Show device frame in landing embed |
 | `notes` | No | string | Build/deploy notes |
 
-After mockup deploy, automation should set `mockup.previewUrl` and `deployment.mockupUrl` to the same live URL.
+After mockup deploy, automation should set `mockup.previewUrl` and `deployment.mockup.url` to the same live URL.
 
 ---
 
@@ -226,7 +242,7 @@ Defines landing page structure, section order, and where copy lives.
 | `id` | Yes | enum | `hero`, `features`, `screenshots`, `socialProof`, `pricing`, `faq`, `cta`, `footer` |
 | `enabled` | Yes | boolean | Whether to render this section |
 | `source` | Yes | enum | `inline`, `file`, or `media` |
-| `inline` | If enabled + inline | object | `{ headline?, subheadline?, body? }` |
+| `inline` | If enabled + inline | object | `{ headline?, subheadline?, body?, placeholder? }` — `placeholder` for CTA email input |
 | `file` | If enabled + file | string | Path to markdown (e.g. `copy/hero.md`) |
 
 When `source` is `media`, the section pulls from `media.screenshots` — no `inline` or `file` field is needed. Example:
@@ -237,6 +253,19 @@ When `source` is `media`, the section pulls from `media.screenshots` — no `inl
 
 **Minimal packages** use `source: "inline"` for `hero` and `cta` only.  
 **Full packages** reference `copy/*.md` files for long-form content and may include a `screenshots` section with `source: "media"`.
+
+### copy/ markdown conventions
+
+Landing generators read markdown from `copy/` when sections use `source: "file"`. **App-specific content must live in the package** — generators translate package data only and must not embed app-specific defaults.
+
+| File | Sections | Format |
+|------|----------|--------|
+| `copy/hero.md` | `hero` | `## Headline`, `## Subheadline`, optional `## Body` |
+| `copy/benefits.md` | Hero bullets, benefit grid | `## Benefit N`, `**Title:**`, optional `**Icon:**` (`sparkles`, `check`, `star`, `zap`, `shield`, `heart`, `phone`), description paragraph |
+| `copy/features.md` | `features` | `## Feature N`, `**Title:**`, description paragraph |
+| `copy/faq.md` | `faq` | `## Question?` as H2, answer paragraphs below |
+
+Benefits are not declared in `app.json` — reference `copy/benefits.md` from your package and ensure the landing generator reads it (see landing-template `generate-app-config.js`).
 
 ---
 
@@ -283,7 +312,13 @@ The string form (e.g. `"utm_source=facebook&utm_medium=paid&utm_campaign={{appId
 
 Webhook placeholders and custom event definitions for the analytics pipeline.
 
-### webhooks
+### webhookUrl (canonical)
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `webhookUrl` | string \| null | **Canonical** unified landing-event webhook. All `page_view`, `buy_now_clicked`, `email_captured`, and `mockup_interacted` events POST here. Required before `status: ready`. Provisioned during `provisioning`. |
+
+### webhooks (legacy / pipeline)
 
 All values are URI strings or `null` until provisioned.
 
@@ -291,8 +326,10 @@ All values are URI strings or `null` until provisioned.
 |-----|------------|
 | `validationComplete` | Package passes validation |
 | `deployComplete` | Mockup and landing page are live |
-| `emailCaptured` | User submits email on landing page |
-| `buyNowClicked` | User clicks Buy Now |
+| `emailCaptured` | Legacy fallback for `email_captured` landing events |
+| `buyNowClicked` | Legacy fallback for `buy_now_clicked` landing events |
+
+When `tracking.webhookUrl` is set, the landing template routes all events to it. Legacy per-event URLs are used only when `webhookUrl` is null.
 
 ### events
 
@@ -307,11 +344,16 @@ Identifiers that route experiment data to the analytics dashboard.
 | Field | Type | Notes |
 |-------|------|-------|
 | `projectId` | string | Top-level analytics project |
-| `experimentId` | string | Per-experiment identifier |
+| `experimentId` | string | Stable experiment family identifier |
+| `experimentRunId` | string | Immutable run ID for one validation cycle |
+| `landingVariantId` | string | Landing copy/layout variant (e.g. `v1`) |
+| `mockupVersionId` | string | Mockup build variant (e.g. `v1`) |
 | `funnelName` | string | Funnel definition name |
 | `customDimensions` | object | Key-value map for dashboard filters |
 
 `analytics.experimentId` and `experiment.experimentName` serve different purposes: the former is a machine ID for dashboards; the latter is a human-readable experiment label.
+
+Required before `status: provisioning` — see [validator-gate.md](docs/validator-gate.md).
 
 ---
 
@@ -327,7 +369,7 @@ Validation-specific data. Defines the hypothesis, budget, and rules for promotin
 | `testBudget` | Yes* | object | See below |
 | `decisionRules` | Yes* | object | See below |
 
-\* Required before `status: ready` (enforced in Phase 2).
+\* Required before `status: provisioning` (enforced in Phase 2 validator).
 
 ### testBudget
 
@@ -350,18 +392,34 @@ Validation-specific data. Defines the hypothesis, budget, and rules for promotin
 
 ## deployment
 
-Generated and deployed URLs and platform IDs. **Populated by automation** — leave all fields `null` in new packages.
+Generated and deployed URLs and platform IDs. **Populated by automation** — leave all nested fields `null` in new packages.
+
+**v1 model:** one Vercel project per mockup, one Vercel project per landing page.
+
+### mockup
 
 | Field | Type | Notes |
 |-------|------|-------|
-| `mockupUrl` | string \| null | Live mockup URL after deploy |
-| `landingPageUrl` | string \| null | Live landing page URL |
-| `vercelProjectId` | string \| null | Vercel project identifier |
-| `vercelDeploymentUrl` | string \| null | Latest Vercel deployment URL |
-| `githubRepoUrl` | string \| null | Source repository URL if created |
-| `lastDeployedAt` | string \| null | ISO 8601 timestamp of most recent deploy |
+| `vercelProjectId` | string \| null | Vercel project for the mockup |
+| `url` | string \| null | Live mockup URL after deploy |
+| `lastDeployedAt` | string \| null | ISO 8601 timestamp of most recent mockup deploy |
 
-n8n workflows should write these fields back to `app.json` on Google Drive after deploy steps complete.
+### landing
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `vercelProjectId` | string \| null | Vercel project for the landing page |
+| `url` | string \| null | Canonical public landing URL (ad destination) |
+| `deploymentUrl` | string \| null | Latest Vercel deployment URL |
+| `lastDeployedAt` | string \| null | ISO 8601 timestamp of most recent landing deploy |
+
+### githubRepoUrl
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `githubRepoUrl` | string \| null | Source repository URL if created |
+
+n8n workflows should write these fields back to `app.json` on Google Drive after deploy steps complete. On mockup deploy, also set `mockup.previewUrl` to match `deployment.mockup.url`.
 
 ---
 
@@ -397,12 +455,27 @@ Package ready for automation:
 
 - All minimal requirements
 - Full `experiment` section populated
-- `status` set to `ready`
+- Analytics IDs: `projectId`, `experimentId`, `experimentRunId`, `landingVariantId`, `mockupVersionId`
+- `status` set to `ready` (requires `tracking.webhookUrl` — typically set during `provisioning`)
 - Recommended: `branding`, `mockup`, `media`, `ads`, `tracking`, `analytics`
+
+See [docs/validator-gate.md](docs/validator-gate.md) for the full gate checklist.
 
 ### Full profile
 
-Reference package using every section, including `appStore` and file-based copy.
+Reference package using every section, including `appStore`, file-based copy (`hero`, `benefits`, `features`, `faq`), and landing-specific fields (`badgeText`, `landingPhrase`, `landingStyle`, mockup embed dimensions).
+
+---
+
+## Landing page transform
+
+Consumers (e.g. `landing-template/scripts/generate-app-config.js`) map App Package data into landing `app-config.json`. Rules:
+
+1. **Single source of truth:** App-specific copy and labels come from `app.json` and `copy/` — not from generator hardcoded defaults.
+2. **Generic fallbacks only:** When a field is omitted, generators may use platform-neutral defaults (e.g. empty string, `clipBottomPx: 0`, platform-based badge for iOS).
+3. **Key mappings:** `audience.landingPhrase` → target audience line; `identity.badgeText` → hero badge; `copy/benefits.md` → `benefits[]`; `landingPage.seo` → page metadata; `landingPage.sections[footer].inline.body` → footer text; `commerce.cta.waitlistText` → email capture button; CTA `inline.placeholder` → email input placeholder.
+
+See your landing template's transform documentation for the full field reference.
 
 ---
 
@@ -424,7 +497,6 @@ The file [templates/app.json](templates/app.json) includes `_comment` keys for d
 
 - Validator CLI or CI enforcement
 - n8n workflow definitions
-- Landing page generator
 - Mockup deploy tooling
 
-These consume this spec in later phases.
+Landing page generators consume this spec; they must translate package data rather than owning app-specific content.
