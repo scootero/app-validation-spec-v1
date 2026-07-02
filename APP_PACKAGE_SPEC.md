@@ -64,6 +64,7 @@ Paths in `app.json` are relative to the package root unless noted otherwise.
 | `tracking` | No | Webhook placeholders and custom events |
 | `analytics` | No | Dashboard and funnel identifiers |
 | `experiment` | No* | Validation hypothesis, budget, decision rules |
+| `source` | No | Pre-provisioned mockup deploy infrastructure (GitHub + Vercel) |
 | `deployment` | No | Generated URLs and platform IDs |
 | `appStore` | No | Reserved App Store metadata |
 
@@ -390,9 +391,41 @@ Validation-specific data. Defines the hypothesis, budget, and rules for promotin
 
 ---
 
+## source
+
+Pre-provisioned deploy infrastructure for the interactive mockup. **Human-set at package setup** — WF1 reads these fields but never writes them.
+
+WF1 v1 assumes GitHub repo and Vercel project already exist and are connected before the workflow runs. GitHub is the deployable code source; Vercel is the hosting system; n8n orchestrates deploy triggers only.
+
+| Field | Required for WF1 | Type | Notes |
+|-------|------------------|------|-------|
+| `mockupGithubRepo` | Yes | string | GitHub repo as `org/repo` (e.g. `scootero/Human-Lab`) or full GitHub URL |
+| `mockupBranch` | Yes | string | Branch to deploy (e.g. `main`) |
+| `mockupRootDirectory` | Yes | string | Root directory in repo (e.g. `mockup`); must match Vercel project settings |
+| `vercelMockupProjectId` | One of ID or name | string \| null | Vercel project ID (e.g. `prj_xxx`) |
+| `vercelMockupProjectName` | One of ID or name | string \| null | Vercel project name (e.g. `human-lab`) |
+
+**WF1 validation:** require `mockupGithubRepo`, `mockupBranch`, `mockupRootDirectory`, and at least one of `vercelMockupProjectId` or `vercelMockupProjectName`.
+
+**Secrets:** API tokens and credentials never belong in `source` or any `app.json` field — store them in n8n Credentials only.
+
+Example:
+
+```json
+"source": {
+  "mockupGithubRepo": "scootero/Human-Lab",
+  "mockupBranch": "main",
+  "mockupRootDirectory": "mockup",
+  "vercelMockupProjectId": "prj_xxx",
+  "vercelMockupProjectName": "human-lab"
+}
+```
+
+---
+
 ## deployment
 
-Generated and deployed URLs and platform IDs. **Populated by automation** — leave all nested fields `null` in new packages.
+Generated and deployed URLs and platform IDs. **Populated by automation** — leave all nested fields `null` in new packages. Do not mix human-set deploy inputs here; use `source` for pre-provisioned infrastructure metadata.
 
 **v1 model:** one Vercel project per mockup, one Vercel project per landing page.
 
@@ -447,7 +480,7 @@ Smallest valid package for early ideation:
 
 - Root: `specVersion`, `appId`, `status` (`draft`), `identity`, `audience`, `commerce`, `landingPage`
 - `landingPage.sections`: at least `hero` and `cta` enabled with `source: "inline"`
-- No `copy/`, `media/`, `mockup/`, `ads/`, `deployment`, or `appStore` required
+- No `copy/`, `media/`, `mockup/`, `ads/`, `source`, `deployment`, or `appStore` required
 
 ### Ready profile
 
@@ -456,8 +489,11 @@ Package ready for automation:
 - All minimal requirements
 - Full `experiment` section populated
 - Analytics IDs: `projectId`, `experimentId`, `experimentRunId`, `landingVariantId`, `mockupVersionId`
-- `status` set to `ready` (requires `tracking.webhookUrl` — typically set during `provisioning`)
+- `source` section populated with mockup GitHub repo, branch, root directory, and Vercel project ID or name (required for **WF1** mockup deploy)
+- `status` set to `ready` by human when package and mockup infrastructure are complete
 - Recommended: `branding`, `mockup`, `media`, `ads`, `tracking`, `analytics`
+
+**WF1 v1 note:** `tracking.webhookUrl` is **not** a gate for WF1 mockup deploy — webhook provisioning belongs to future **WF3**. The `provisioning` → `ready` transition with webhook write-back is optional until tracking workflows are implemented.
 
 See [docs/validator-gate.md](docs/validator-gate.md) for the full gate checklist.
 

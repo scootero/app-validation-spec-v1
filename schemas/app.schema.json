@@ -45,6 +45,7 @@
     "tracking": { "$ref": "#/$defs/tracking" },
     "analytics": { "$ref": "#/$defs/analytics" },
     "experiment": { "$ref": "#/$defs/experiment" },
+    "source": { "$ref": "#/$defs/source" },
     "deployment": { "$ref": "#/$defs/deployment" },
     "appStore": { "$ref": "#/$defs/appStore" }
   },
@@ -741,6 +742,41 @@
               "maxLength": 500
             }
           }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pre-provisioned deploy infrastructure metadata. Human-set at package setup; read by WF1; never written by automation.",
+      "properties": {
+        "mockupGithubRepo": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 200,
+          "description": "GitHub repository for mockup deploys, as org/repo (e.g. scootero/Human-Lab) or full GitHub URL."
+        },
+        "mockupBranch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Git branch Vercel should deploy from (e.g. main)."
+        },
+        "mockupRootDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Root directory within the GitHub repo for the mockup app (e.g. mockup). Must match Vercel project settings."
+        },
+        "vercelMockupProjectId": {
+          "type": ["string", "null"],
+          "maxLength": 100,
+          "description": "Vercel project ID for the mockup (e.g. prj_xxx). At least one of vercelMockupProjectId or vercelMockupProjectName required before WF1."
+        },
+        "vercelMockupProjectName": {
+          "type": ["string", "null"],
+          "maxLength": 100,
+          "description": "Vercel project name for the mockup. At least one of vercelMockupProjectId or vercelMockupProjectName required before WF1."
         }
       }
     },
